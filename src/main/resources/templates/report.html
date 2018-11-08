@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=8">
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8">
+    <title> 显示csv </title>
+
+</head>
+
+<body>
+    <label>文件:</label><input type="file" id="file" size="15" onchange="upload(this)" />
+    <div id="tables">
+
+    </div>
+
+    <script>
+
+        function upload(input) {
+            //支持IE 7 8 9 10
+            if (typeof window.ActiveXObject != 'undefined') {
+                var fso, ts, s, table;
+                var div = document.getElementById("tables");
+                if (div.childNodes[0]) {
+                    div.removeChild(div.childNodes[0])
+                }
+                table = document.createElement("table");//创建table
+                table.setAttribute("border", 1)
+                fso = new ActiveXObject("Scripting.FileSystemObject");
+                ts = fso.OpenTextFile(input.value, 1);
+                var line = 0
+                var headIndex = new Array()
+                while (!ts.AtEndOfStream) {
+                    s = ts.ReadLine();
+                    line += 1;
+                    // 去掉引号中的空格，一行搞定
+                    s = " " + s.replace(/\"([^\"]*)\"/g, function (word) { return word.replace(/\s/g, ""); }) + "   ";
+                    s = s.replace(/\"/g, "")
+                    // 确定文字的坐标，根据前面空格的数量
+                    var cols = s.match(/\s/g).length
+                    var text = s.split(/\s/g);
+                    var spaces = s.match(/\s+.*?/g)
+                    var row = table.insertRow()
+                    var spacesSum = new Array()
+                    //空格变为递增
+                    var sum = 0
+                    for (var i = 0; i < spaces.length; i++) {
+
+                        if (i == 0) {
+                            sum = spaces[i].length
+                        } else {
+                            sum += spaces[i].length
+                        }
+                        spacesSum.push(sum)
+                    }
+                    // 表头前
+                    if (s.match(/国家金库+.+表|中国人民银行+.+表/)) {
+                        var line_title=line
+                        var cell = row.insertCell()
+                        cell.setAttribute("colspan", cols)
+                        cell.innerHTML = '<div style="text-align:center;font-weight:bold;font-size:20px">'
+                            + s.replace(/\s/, "") + '</div>'
+                        // 日期，居中，加粗
+                    } else if (s.match(/[0-9]{4}\u5e74[0-9]{2}\u6708[0-9]{2}\u65e5/) || s.match(/第.*号/)
+                        || s.match(/共.*页/) || s.match(/【.*】/) || s.match(/国库公章/)|| s.match(/表内|表外/)) {
+                        var cell = row.insertCell()
+                        cell.setAttribute("colspan", cols)
+                        cell.innerHTML = '<div style="text-align:right;font-weight:bold;font-size:15px">'
+                            + s.replace(/\s/, "") + '</div>'
+                    }
+                    // 确定表头
+                    else if (s.match(/科目|账号|余额/) && line < line_title+9) {
+                        var headIndex=[]
+                        var line2 = line + 1
+                        for (var i = 0; i < spacesSum.length; i++) {
+                            var cell = row.insertCell()
+                            if (i == 0) {
+                                cell.setAttribute("colspan", spacesSum[i])
+                            } else {
+                                cell.setAttribute("colspan", spacesSum[i] - spacesSum[i - 1])
+                                cell.innerHTML = text[i - 1]
+                            }
+                            headIndex.push(spacesSum[i])
+                        }
+
+                    } else if (s.match(/借方|贷方/) && line == line2) {
+                        // 更新 headIndex
+                        for (var i = 0; i < spacesSum.length; i++) {
+                            var flag = 0
+                            for (var j = 0; j < headIndex.length; j++) {
+                                if (spacesSum[i] === headIndex[j]) {
+                                    flag = 1
+                                }
+                            }
+                            if (flag == 0) {
+                                headIndex.push(spacesSum[i])
+                            }
+                        }
+                        headIndex.sort(function sortNumber(a, b) { return a - b })
+                        // 匹配 headIndex
+                        var html = "";
+                        for (var i = 0; i < headIndex.length; i++) {
+                            var cell = row.insertCell()
+                            if (i == 0) {
+                                cell.setAttribute("colspan", headIndex[i])
+                            } else {
+                                cell.setAttribute("colspan", headIndex[i] - headIndex[i - 1])
+                                if (html) {
+                                    cell.innerHTML = html
+                                    html = ""
+                                }
+                                for (var j = 0; j < spacesSum.length; j++) {
+                                    if (spacesSum[j] === headIndex[i]) {
+                                        html = text[j]
+                                    }
+                                }
+                            }
+                        }
+                    } else if (text.length) {
+                        var html = "";
+                        for (var i = 0; i < headIndex.length; i++) {
+                            var cell = row.insertCell()
+                            if (i == 0) {
+                                cell.setAttribute("colspan", headIndex[i])
+                                if (spacesSum[0] < 2) {
+                                    html = text[0]
+                                }
+                            } else {
+                                cell.setAttribute("colspan", headIndex[i] - headIndex[i - 1])
+                                if (html) {
+                                    cell.innerHTML = html
+                                    html = ""
+                                }
+                            }
+                            for (var j = 0; j < spacesSum.length; j++) {
+                                if (spacesSum[j] === headIndex[i]) {
+                                    html = text[j]
+                                }
+                            }
+                        }
+                    }
+                }
+                div.appendChild(table);
+            }
+        }
+
+
+
+
+        // 简单的版本
+        function upload1(input) {
+            if (typeof window.ActiveXObject != 'undefined') {
+                var fso, ts, s, html;
+                var div = document.getElementById("tables");
+                if (div.childNodes[0]) {
+                    div.removeChild(div.childNodes[0])
+                }
+                var table = document.createElement("table");//创建table
+                table.setAttribute("border", 1)
+                table.setAttribute(row)
+                fso = new ActiveXObject("Scripting.FileSystemObject");
+                ts = fso.OpenTextFile(input.value, 1);
+                while (!ts.AtEndOfStream) {
+                    s = ts.ReadLine();
+                    // 去掉引号中的空格，一行搞定
+                    s = " " + s.replace(/\"([^\"]*)\"/g, function (word) { return word.replace(/\s/g, ""); }) + "   ";
+                    s = s.replace(/\"/g, "")
+                    // 确定文字的坐标，根据前面空格的数量
+                    var row = table.insertRow();//创建一行
+                    var text = s.split(/\s/g);
+                    var spaces = s.match(/\s+.*?/g)
+                    for (var i = 0; i < spaces.length; i++) {
+                        if (i == 0) {
+                            // 插入一个占位单元
+                            var firstCell = row.insertCell()
+                            firstCell.setAttribute("colspan", spaces[i].length)
+                            firstCell.innerHTML = spaces[i].length;
+                        } else {
+                            var cell = row.insertCell();//创建一个单元
+                            cell.setAttribute("colspan", spaces[i].length)
+                            cell.innerHTML = text[i - 1] + spaces[i].length;
+                        }
+                    }
+                    div.appendChild(table);
+                }
+            }
+        }
+
+        function upload2(input) {
+            //支持IE 7 8 9 10
+
+            if (typeof window.ActiveXObject != 'undefined') {
+                var fso, ts, s, table;
+                var div = document.getElementById("tables");
+                if (div.childNodes[0]) {
+                    div.removeChild(div.childNodes[0])
+                }
+                table = document.createElement("table");//创建table
+                table.setAttribute("border", 1)
+                fso = new ActiveXObject("Scripting.FileSystemObject");
+                ts = fso.OpenTextFile(input.value, 1);
+                var line = 0
+                var headIndex = new Array()
+                while (!ts.AtEndOfStream) {
+                    s = ts.ReadLine();
+                    line += 1;
+                    // 去掉引号中的空格，一行搞定
+                    s = " " + s.replace(/\"([^\"]*)\"/g, function (word) { return word.replace(/\s/g, ""); }) + "   ";
+                    s = s.replace(/\"/g, "")
+                    // 确定文字的坐标，根据前面空格的数量
+                    var text = s.split(/\s/g);
+                    var spaces = s.match(/\s+.*?/g)
+                    var row = table.insertRow()
+                    // 标题,居中，文字加粗加大
+                    if (s.match(/国家金库+.+表|中国人民银行+.+表/)) {
+                        var cell = row.insertCell()
+                        cell.setAttribute("colspan", spaces[0].length + spaces[1].length)
+                        cell.innerHTML = '<div style="text-align:center;font-weight:bold;font-size:20px">'
+                            + text[0] + '</div>'
+                        // 日期，居中，加粗
+                    } else if (s.match(/[0-9]{4}\u5e74[0-9]{2}\u6708[0-9]{2}\u65e5/)) {
+                        var cell = row.insertCell()
+                        if (text.length == 1) {
+                            cell.setAttribute("colspan", spaces[0].length + spaces[1].length)
+                            cell.innerHTML = '<div style="text-align:center;font-weight:bold;font-size:15px">'
+                                + text[0] + '</div>'
+                        } else if (text.length == 2) {
+                            cell.setAttribute("colspan", spaces[0].length + spaces[1].length + spaces[2].length)
+                            cell.innerHTML = '<div style="text-align:center;font-weight:bold;font-size:15px">'
+                                + text[0] + text[1] + '</div>'
+                        } else if (text.length == 4) {
+                            cell.setAttribute("colspan", spaces[0].length + spaces[1].length + spaces[2].length + spaces[3].length + spaces[4].length)
+                            cell.innerHTML = '<div style="text-align:center;font-weight:bold;font-size:15px">'
+                                + text[0] + text[1] + '</div>'
+                                + '<div style="text-align:right;font-weight:bold;font-size:15px">'
+                                + text[2] + "  " + text[3] + '</div>'
+                        }
+                        // 第298号
+                    } else if (s.match(/第.*号/)) {
+                        var cell = row.insertCell()
+                        if (text.length == 1) {
+                            cell.setAttribute("colspan", spaces[0].length + spaces[1].length)
+                            cell.innerHTML = '<div style="text-align:right;font-weight:bold;font-size:15px">'
+                                + text[0] + '</div>'
+                        }
+                        // 第1页 共5页
+                    } else if (s.match(/共.*页/)) {
+                        var cell = row.insertCell()
+                        if (text.length == 2) {
+                            cell.setAttribute("colspan", spaces[0].length + spaces[1].length + spaces[2].length)
+                            cell.innerHTML = '<div style="text-align:right;font-weight:bold;font-size:15px">'
+                                + text[0] + text[1] + '</div>'
+                        }
+                    } else if (s.match(/【.*】/)) {
+                        var cell = row.insertCell()
+                        if (text.length == 1) {
+                            cell.setAttribute("colspan", spaces[0].length + spaces[1].length)
+                            cell.innerHTML = '<div style="text-align:right;font-size:15px">'
+                                + text[0] + '</div>'
+                        }
+                    } else if (s.match(/国库公章/)) {
+                        var cell = row.insertCell()
+                        if (text.length == 3) {
+                            cell.setAttribute("colspan", spaces[0].length + spaces[1].length + spaces[2].length + spaces[3].length)
+                            cell.innerHTML = '<div style="text-align:left;font-size:15px">' + text[0] + '</div>'
+                                + '<div style="text-align:right;font-size:15px">' + text[1] + text[2] + '</div>'
+                        }
+                        // 确定表头
+                    } else if (s.match(/科目|账号|余额/) && line < 10) {
+
+                        for (var i = 0; i < text.length; i++) {
+                            var cell = row.insertCell()
+                            if (i == 0) {
+                                cell.setAttribute("colspan", spaces[i].length + spaces[i + 1].length)
+                                cell.innerHTML = text[i] + (spaces[i].length + spaces[i + 1].length)
+                            } else {
+                                cell.setAttribute("colspan", spaces[i + 1].length)
+                                cell.innerHTML = text[i] + spaces[i + 1].length
+                            }
+                        }
+                    }
+                    // 排除空行
+                    else if (spaces.length > 1) {
+                        for (var i = 0; i < spaces.length; i++) {
+                            if (i == 0) {
+                                // 插入一个占位单元
+                                var firstCell = row.insertCell()
+                                firstCell.setAttribute("colspan", spaces[i].length)
+                                firstCell.innerHTML = spaces[i].length;
+                            } else {
+                                var cell = row.insertCell();//创建一个单元
+                                cell.setAttribute("colspan", spaces[i].length)
+                                cell.innerHTML = text[i - 1] + spaces[i].length;
+                            }
+                        }
+                    }
+
+
+                }
+                div.appendChild(table);
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>

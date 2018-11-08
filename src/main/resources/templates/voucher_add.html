@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=8" />
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+<title>扫描凭据</title>
+
+<script language="javascript" type="text/javascript">
+	var DeviceMain;//主头
+	var Video;//视频
+	var PicPath;
+
+	function plugin() {
+		return document.getElementById('video');
+	}
+
+	function view() {
+		return document.getElementById('video');
+	}
+
+	function thumb() {
+		return document.getElementById('image');
+	}
+
+	function isDeskew() {
+		return document.getElementById("Deskew").checked
+	}
+
+	function isOCR() {
+		return document.getElementById("OCR").checked
+	}
+
+	function addEvent(obj, name, func) {
+		if (obj.attachEvent) {
+			obj.attachEvent("on" + name, func);
+		} else {
+			obj.addEventListener(name, func, false);
+		}
+	}
+
+	function OpenVideo() {
+		var dev;
+
+		if (DeviceMain) {
+			CloseVideo()
+			dev = DeviceMain;//选中主头
+			var SelectType = 1; //格式设置 1-YUY2，2-MJPG，4-UYVY
+
+			//分辨率设置
+			// 1-3648×2736, 2-3264×2448，3-2592×1944，4-1920×1080
+			var nResolution = 1;
+
+			Video = plugin().Device_CreateVideo(dev, nResolution, SelectType);
+			if (Video) {
+				view().View_SelectVideo(Video);
+				view().View_SetText("摄像头打开中，请等待...", 0);
+			}
+		}
+	}
+
+	function CloseVideo() {
+		if (Video) {
+			view().View_SetText("", 0);
+			plugin().Video_Release(Video);
+			Video = null;
+		}
+	}
+	function Load() {
+		//设备接入和丢失
+		//type设备类型， 1 表示视频设备， 2 表示音频设备
+		//idx设备索引
+		//dbt 1 表示设备到达， 2 表示设备丢失
+		addEvent(plugin(), 'DevChange', function(type, idx, dbt) {
+			if (1 == type)//视频设备
+			{
+				if (1 == dbt)//设备到达
+				{
+					var deviceType = plugin().Global_GetEloamType(1, idx);
+					if (1 == deviceType)//主摄像头
+					{
+						if (null == DeviceMain) {
+							DeviceMain = plugin().Global_CreateDevice(1, idx);
+							if (DeviceMain) {
+								OpenVideo();//是主头自动打开视频
+							}
+						}
+					}
+				} else if (2 == dbt)//设备丢失
+				{
+					if (DeviceMain) {
+						if (plugin().Device_GetIndex(DeviceMain) == idx) {
+							CloseVideo();
+							plugin().Device_Release(DeviceMain);
+							DeviceMain = null;
+						}
+					}
+				}
+			}
+		});
+
+		var title = document.title;
+		document.title = title + plugin().version;
+
+		view().Global_SetWindowName("view");
+		thumb().Global_SetWindowName("view");
+
+		plugin().Global_InitDevs();
+		//开启纠偏
+		if (isDeskew()) {
+			plugin().Video_EnableDeskewEx(Video, 1)
+		} else {
+			plugin().Video_DisableDeskew(Video);
+		}
+
+		// OCR
+		plugin().Global_InitOcr();
+
+	}
+	function Unload() {
+		if (Video) {
+			view().View_SetText("", 0);
+			plugin().Video_Release(Video);
+			Video = null;
+		}
+		if (DeviceMain) {
+			plugin().Device_Release(DeviceMain);
+			DeviceMain = null;
+		}
+		plugin().Global_DeinitOcr();
+		plugin().Global_DeinitDevs();
+	}
+
+	function GetTimeString() {
+		var date = new Date();
+		var yy = date.getFullYear().toString();
+		var mm = (date.getMonth() + 1).toString();
+		var dd = date.getDate().toString();
+		var hh = date.getHours().toString();
+		var nn = date.getMinutes().toString();
+		var ss = date.getSeconds().toString();
+		var mi = date.getMilliseconds().toString();
+
+		var ret = yy + mm + dd + hh + nn + ss + mi;
+		return ret;
+	}
+
+	// 拍照
+	function Scan() {
+		if (Video) {
+			var ocr_text = "";
+			thumb().View_SetText("拍摄识别中...", 0);
+
+			var img = plugin().Video_CreateImageList(Video, 0, 0);
+			if (img) {
+				img = plugin().ImageList_GetImage(img, 0);
+				var Name = "C:\\scan\" + GetTimeString() + ".jpg";
+				
+				var b = plugin().Image_Save(img, Name, 0);
+				if (b) {
+					view().View_PlayCaptureEffect();
+
+					thumb().View_SelectImage(img);
+					PicPath = Name;
+
+					if (isOCR) {
+						plugin().Global_DiscernOcr(1, img);
+						var b = plugin().Global_WaitOcrDiscern();
+						if (b) {
+							thumb().View_SetText("", 0);
+							ocr_text = plugin().Global_GetOcrPlainText(0);
+							ocr_text = ocr_text.replace(/,/g, "");
+							ocr_text = ocr_text.replace(/\s+/g, "");
+							document.getElementById('OCRtext').value = ocr_text;
+							getInfo(ocr_text);
+						}
+
+					}
+				}
+				plugin().Image_Release(img);
+			}
+		}
+	}
+
+	// 自动裁剪
+	function Deskew(obj) {
+		if (obj.checked) {
+			if (Video) {
+				plugin().Video_EnableDeskewEx(Video, 1);
+			}
+		} else {
+			if (Video) {
+				plugin().Video_DisableDeskew(Video);
+			}
+		}
+	}
+
+	// ORC
+	function OCR() {
+		if (PicPath) {
+			plugin().Global_InitOcr();
+
+			var img;
+			img = plugin().Global_CreateImageFromFile(PicPath, 0);
+			plugin().Global_DiscernOcr(1, img);
+			var b = plugin().Global_WaitOcrDiscern();
+			if (b) {
+				alert(plugin().Global_GetOcrPlainText(0));
+				plugin().Global_SaveOcr("C:\\1.doc", 0);
+			}
+			plugin().Global_DeinitOcr();
+			plugin().Image_Release(img);
+		} else {
+			alert("请先拍照！");
+		}
+	}
+</script>
+
+</head>
+
+<body onload="Load()" onunload="Unload()">
+	<div th:replace="base :: header"></div>
+	<!-- 两个良田高拍仪插件，需要安装良田软件 -->
+
+
+	<div style="width: 60%; float: left;">
+
+		<object id="image" type="application/x-eloamplugin" width="730"
+			height="547" name="view"></object>
+	</div>
+
+	<div style="width: 40%; float: right;">
+		<div>
+			
+			<input class="submit_01" type="button" value="打开摄像头"
+				onclick="OpenVideo()" /> <input class="submit_01" type="button"
+				value="关闭摄像头" onclick="CloseVideo()" />
+			<div>
+				自动纠偏<input id="Deskew" type="checkbox" onclick="Deskew(this)" />
+			</div>
+			<div>
+				文字识别<input id="OCR" type="checkbox" />
+			</div>
+		</div>
+
+
+		<div>
+			扫描的凭证图片
+			<object id="video" type="application/x-eloamplugin" width="456"
+				height="342" name="view"></object>
+		</div>
+
+		<form class="form-horizontal" enctype="multipart/form-data"  th:action="@{/voucher/add}"
+			method="post">
+			<input type="file" id="scanImage" name="file"/>
+			<div>
+				识别的记账内容：
+				<textarea id="OCRtext" name="content" style="width: 80%; height: 200px;"></textarea>
+			</div>
+			<div>
+				设置记账日期：<input id="datepicker" type="text" name="recordDate" />
+			</div>
+			<input class="submit_01" type="button" value="拍照" onclick="Scan()" />
+			<input type="submit" value="确认" class="btn btn-info" />
+		</form>
+
+	</div>
+	<div th:replace="base :: footer"></div>
+</body>
+
+<script>
+	$('#datepicker').datepicker({
+		language : "zh-CN",
+		todayBtn : "linked",
+		orientation: "top auto"
+
+	});
+</script>
+
+</html>
