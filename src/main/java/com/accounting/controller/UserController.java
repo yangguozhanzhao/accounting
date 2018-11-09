@@ -82,17 +82,14 @@ public class UserController {
 	@RequestMapping(value = "user/delete")
 	public String delete(Long id) {
 		userService.delete(id);
-		return "redirect:/user_list";
+		return "redirect:/user/list";
 	}
 	
 	// 增加用户
 	@RequestMapping("user/add")
     public String add(User user) {
         userService.save(user);
-        return "redirect:/user_list";
+        return "redirect:/user/list";
     }
-	
-
-	
 	
 }

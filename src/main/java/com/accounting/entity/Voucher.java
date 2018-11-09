@@ -57,7 +57,7 @@ public class Voucher {
         this.id = id;
     }
 
-    public String content() {
+    public String getContent() {
         return content;
     }
 
@@ -80,5 +80,13 @@ public class Voucher {
 
     public void setRecordDate(Date recordDate) {
         this.recordDate = recordDate;
+    }
+    
+    public Date getCreateTime() {
+    	return createTime;
+	}
+    
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 }

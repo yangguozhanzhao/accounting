@@ -8,7 +8,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
 <title>扫描凭据</title>
 
-<script language="javascript" type="text/javascript">
+<script th:inline="javascript">
 	var DeviceMain;//主头
 	var Video;//视频
 	var PicPath;
@@ -68,11 +68,13 @@
 			Video = null;
 		}
 	}
+
 	function Load() {
 		//设备接入和丢失
 		//type设备类型， 1 表示视频设备， 2 表示音频设备
 		//idx设备索引
 		//dbt 1 表示设备到达， 2 表示设备丢失
+		console.log("load....");
 		addEvent(plugin(), 'DevChange', function(type, idx, dbt) {
 			if (1 == type)//视频设备
 			{
@@ -119,6 +121,7 @@
 		plugin().Global_InitOcr();
 
 	}
+
 	function Unload() {
 		if (Video) {
 			view().View_SetText("", 0);
@@ -155,15 +158,16 @@
 
 			var img = plugin().Video_CreateImageList(Video, 0, 0);
 			if (img) {
-				img = plugin().ImageList_GetImage(img, 0);
-				var Name = "C:\\scan\" + GetTimeString() + ".jpg";
-				
+				img = plugin().ImageList_GetImage(img, 0)
+				var Name = "C:\\" + GetTimeString() + ".jpg";
 				var b = plugin().Image_Save(img, Name, 0);
 				if (b) {
 					view().View_PlayCaptureEffect();
 
 					thumb().View_SelectImage(img);
 					PicPath = Name;
+					console.log(PicPath);
+					document.getElementById('image').value = PicPath;
 
 					if (isOCR) {
 						plugin().Global_DiscernOcr(1, img);
@@ -174,9 +178,8 @@
 							ocr_text = ocr_text.replace(/,/g, "");
 							ocr_text = ocr_text.replace(/\s+/g, "");
 							document.getElementById('OCRtext').value = ocr_text;
-							getInfo(ocr_text);
-						}
 
+						}
 					}
 				}
 				plugin().Image_Release(img);
@@ -217,66 +220,82 @@
 		}
 	}
 </script>
-
 </head>
 
 <body onload="Load()" onunload="Unload()">
+
 	<div th:replace="base :: header"></div>
-	<!-- 两个良田高拍仪插件，需要安装良田软件 -->
-
-
 	<div style="width: 60%; float: left;">
-
-		<object id="image" type="application/x-eloamplugin" width="730"
-			height="547" name="view"></object>
+		<object id="video" type="application/x-eloamplugin" width="456"
+			height="342" name="view"></object>
 	</div>
 
 	<div style="width: 40%; float: right;">
 		<div>
-			
+
 			<input class="submit_01" type="button" value="打开摄像头"
 				onclick="OpenVideo()" /> <input class="submit_01" type="button"
 				value="关闭摄像头" onclick="CloseVideo()" />
 			<div>
-				自动纠偏<input id="Deskew" type="checkbox" onclick="Deskew(this)" />
+				自动纠偏<input id="Deskew" type="checkbox" checked="checked"
+					onclick="Deskew(this)" />
 			</div>
 			<div>
-				文字识别<input id="OCR" type="checkbox" />
+				文字识别<input id="OCR" checked="checked" type="checkbox" />
 			</div>
 		</div>
+		<object id="image" type="application/x-eloamplugin" width="730"
+			height="547" name="view"></object>
 
 
-		<div>
-			扫描的凭证图片
-			<object id="video" type="application/x-eloamplugin" width="456"
-				height="342" name="view"></object>
-		</div>
-
-		<form class="form-horizontal" enctype="multipart/form-data"  th:action="@{/voucher/add}"
-			method="post">
-			<input type="file" id="scanImage" name="file"/>
+		<div>扫描的凭证图片</div>
+		<iframe id="uf-frame" name="uf-frame"></iframe>
+		<form id="voucher-form" class="form-horizontal" enctype="multipart/form-data"
+			th:action="@{/voucher/add}" method="post" target="uf-frame">
+			<input type="file" id="image" name="file" />
 			<div>
 				识别的记账内容：
-				<textarea id="OCRtext" name="content" style="width: 80%; height: 200px;"></textarea>
+				<textarea id="OCRtext" name="content"
+					style="width: 80%; height: 200px;"></textarea>
 			</div>
 			<div>
 				设置记账日期：<input id="datepicker" type="text" name="recordDate" />
 			</div>
 			<input class="submit_01" type="button" value="拍照" onclick="Scan()" />
-			<input type="submit" value="确认" class="btn btn-info" />
+			<input id="upload" type="button"  value="确认" class="btn btn-info" />
 		</form>
-
+		
+		
 	</div>
 	<div th:replace="base :: footer"></div>
-</body>
 
+</body>
 <script>
 	$('#datepicker').datepicker({
-		language : "zh-CN",
 		todayBtn : "linked",
-		orientation: "top auto"
-
+		language : "zh-CN",
+		orientation : "top auto",
+		autoclose : true
+	})
+	
+	
+	// 校验
+	$('#upload').on('click', function (e) {
+	   $('#voucher-form').submit();
+	   console.log("上传凭证");
 	});
+	
+	//监听frame的load事件判断是否有返回信息
+ 	$('#uf-frame').on('load', function () {
+ 		console.log("load in iframe");
+	    var response = $("#uf-frame").contents().find("body").html();
+	    console.log(response);
+	
+	});
+		
+
+
 </script>
+
 
 </html>

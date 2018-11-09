@@ -20,6 +20,8 @@ import org.hibernate.validator.internal.util.privilegedactions.GetClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,13 +35,13 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.w3c.dom.css.ElementCSSInlineStyle;
 
+import com.accounting.entity.User;
 import com.accounting.entity.Voucher;
 import com.accounting.service.VoucherService;
 
 import ch.qos.logback.core.joran.conditional.ElseAction;
 
 @Controller
-@RequestMapping("voucher")
 public class VoucherController {
 	@Autowired
 	private VoucherService voucherService;
@@ -47,27 +49,42 @@ public class VoucherController {
 
 	
 	// 扫描凭证页面
-	@GetMapping("/toAdd")
+	@GetMapping("voucher/toAdd")
 	public String scan() {
 		return "voucher_add";
 	}
 
-	@PostMapping("/add")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file,
+	// 添加凭证
+	@PostMapping("voucher/add")
+	@ResponseBody
+    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,
     		@RequestParam(value="content",defaultValue="无") String content,
-    		@RequestParam("recordDate") String recordDate){
-      
+    		@RequestParam("recordDate") String recordDate,HttpServletRequest request){
+		logger.info("try to add voucher");
 		if(!file.isEmpty()) {
-			String imagePath = "iamges/"+file.getOriginalFilename();
+			String imagePath = "upload/images/"+file.getOriginalFilename();
 			logger.info("upload...");
 			logger.info(imagePath);
 			logger.info(recordDate);
 			logger.info(content);
 			try {
-				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(imagePath)));
-				out.write(file.getBytes());
-				out.flush();
-				out.close();
+				// 上传文件路径,按照系统日期分文件夹存储
+				String path = request.getServletContext().getRealPath("/upload/");
+				System.out.println("path = " + path);
+				// 上传文件名
+				String filename = file.getOriginalFilename();
+				File filepath = new File(path,filename);
+				// 判断路径是否存在，如果不存在就创建一个
+				if (!filepath.getParentFile().exists()) { 
+					filepath.getParentFile().mkdirs();
+				}
+				// 将上传文件保存到一个目标文件当中
+				file.transferTo(new File(path+File.separator+ filename));
+				
+				//BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(imagePath)));
+				//out.write(file.getBytes());
+				//out.flush();
+				//out.close();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -79,7 +96,7 @@ public class VoucherController {
 			}
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
-			try {
+			try {  
 				Date date = sdf.parse(recordDate);
 				Voucher voucher = new Voucher(date,imagePath,content);
 				voucherService.save(voucher);
@@ -88,15 +105,22 @@ public class VoucherController {
 				logger.error("凭证保存失败");
 				e.printStackTrace();
 			}
-			
 		}
-		return "voucher_add";
+		return ResponseEntity.ok().header("Content-Type", "text/plain").body("no refresh");
+
 	}
 	
-
+	// 查询凭证页面前10
+	@RequestMapping(value="query",method=RequestMethod.GET)
+	public String showRecentVouchers(Model model) {
+		Page<Voucher> voucherList = voucherService.findRecent();
+		model.addAttribute("recentVouchers",voucherList);
+		return "query";
+	}
+	
 	
 	// 根据id显示详情
-	@RequestMapping(value="voucher",method=RequestMethod.GET)
+	@RequestMapping(value="",method=RequestMethod.GET)
 	public Voucher  show(Long id) {
 		return voucherService.findById(id);
 	}

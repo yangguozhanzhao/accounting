@@ -9,6 +9,31 @@
 
 	<div th:replace="base :: header"></div>
 	<h2>查询数据</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<td class="active">id</td>
+				<td class="success">记账日期</td>
+				<td class="warning">凭证图片</td>
+				<td class="success">OCR内容</td>
+				<td class="warning">上传者</td>
+				<td class="warning">上传时间</td>
+			</tr>
+		</thead>
+		<tbody>
+			<div>
+				<tr th:each="voucher: ${recentVouchers.content}">
+					<td th:text="${voucher.id}"></td>
+					<td th:text="${voucher.recordDate}"></td>
+					<td><img th:src="${voucher.imagePath}" height="50" /></td>
+					<td th:text="${voucher.content}"></td>
+					<td>上传者</td>
+					<td th:text="${voucher.createTime}"></td>
+					<td><a th:href="@{/voucher/delete(id=${voucher.id})}">删除</a></td>
+				</tr>
+			</div>
+		</tbody>
+	</table>
 
 
 </body>
