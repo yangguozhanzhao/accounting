@@ -1,32 +1,48 @@
-
-
-
 <div th:fragment="header">
-	<link rel="stylesheet" type="text/css"
-		th:href="@{/css/bootstrap.min.css}" />
-	<link rel="stylesheet" type="text/css"
-		th:href="@{/css/bootstrap-datepicker.min.css}" />
+	<link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}" />
+	<link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap-datepicker.min.css}" />
 	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
 	<script th:src="@{/js/bootstrap.min.js}"></script>
 	<script th:src="@{/js/bootstrap-datepicker.min.js}"></script>
 	<script th:src="@{/js/bootstrap-datepicker.zh-CN.min.js}"></script>
+	<script th:inline="javascript">
+			var session = [[${session}]];
+			if (session.user == null) {
+				alert("请先登录！");
+				window.location.href = "/index.html";
+			}
+	</script>
 	<h1>会计档案管理系统</h1>
-	<nav class="navbar navbar-inverse">
-		<div class="container">
-			<div class="navbar-header">
-				<a class="navbar-brand" th:href="@{/voucher/toAdd}">扫描凭证</a> <a
-					class="navbar-brand" th:href="@{/report/toAdd}">录入日报</a> <a
-					class="navbar-brand" th:href="@{/query}">查询</a> <a
-					class="navbar-brand" th:href="@{/user/list}">管理用户</a> <a
-					class="navbar-brand" th:href="@{/user/edit}">修改密码</a> <a
-					class="navbar-brand" th:href="@{/logout}">退出</a>
-			</div>
+	<div class="navbar" th:if="${session.user != null}">
+		<div class="navbar-inner">
+			<ul class="nav navbar-nav" >
+				<li><a class="navbar-brand" th:href="@{/query}">查询档案</a></li>
+				<li><a class="navbar-brand" th:href="@{/voucher/toAdd}">扫描凭证</a></li>
+				<li><a class="navbar-brand" th:href="@{/report/toAdd}">上传日报</a></li>
+
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" th:text="${session.user.username}"><b class="caret"></b>
+						 </a>
+					<ul class="dropdown-menu">
+						<li><a th:href="@{/user/edit}">修改密码</a></li>
+						<li><a th:href="@{/logout}">退出</a></li>
+					</ul>
+				</li>
+
+				<li th:if="${session.user.username=='admin'}" class="dropdown">
+					<a class="dropdown-toggle" data-toggle="dropdown" href="#">管理员<b class="caret"></b></a>
+					<ul class="dropdown-menu">
+						<li><a th:href="@{/user/list}">管理用户</a></li>
+						<li><a th:href="@{/log/list}">查看日志</a></li>
+					</ul>
+				</li>
+			</ul>
+
 		</div>
-	</nav>
+	</div>
+
 </div>
 
-
-
-<div th:fragment="footer">
+<div th:fragment="footer" style="text-align: center;">
 	<div>&copy; 2018 中国人民银行</div>
 </div>

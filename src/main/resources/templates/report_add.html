@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+	<title>上传日报</title>
+
+</head>
+
+<body style="text-align: center;">
+	<div th:replace="base :: header"></div>
+
+	<div>
+		<form id="report-form" class="form-horizontal" enctype="multipart/form-data" th:action="@{/report/add}" method="post">
+			记账日期：<input id="datepicker" type="text" name="recordDate" />
+			CSV文件(可选择多个)：<input type="file" id="csv" name="file" multiple="multiple" accept=".csv" />
+			<input id="upload" type="button" value="上传日报" class="btn btn-primary" />
+		</form>
+	</div>
+	<div th:replace="base :: footer"></div>
+</body>
+<script th:inline="javascript">
+	$('#datepicker').datepicker({
+		todayBtn: "linked",
+		language: "zh-CN",
+		orientation: "top auto",
+		autoclose: true
+	})
+
+	// 校验记账日期和文件不为空
+	$('#upload').on('click', function (e) {
+		var recordDate = $("#datepicker").val();
+		var csv = $("#csv").val();
+		if(""==recordDate||""==csv){
+			alert("记账日期或日报文件不能为空")
+		} else{
+			$('#voucher-form').submit();
+			console.log("上传日报表");	
+		}
+	});
+
+</script>
+</html>

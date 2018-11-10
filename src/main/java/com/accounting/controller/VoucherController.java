@@ -63,14 +63,13 @@ public class VoucherController {
 		logger.info("try to add voucher");
 		if(!file.isEmpty()) {
 			String imagePath = "upload/images/"+file.getOriginalFilename();
-			logger.info("upload...");
 			logger.info(imagePath);
 			logger.info(recordDate);
 			logger.info(content);
 			try {
 				// 上传文件路径,按照系统日期分文件夹存储
 				String path = request.getServletContext().getRealPath("/upload/");
-				System.out.println("path = " + path);
+				logger.info("path = " + path);
 				// 上传文件名
 				String filename = file.getOriginalFilename();
 				File filepath = new File(path,filename);

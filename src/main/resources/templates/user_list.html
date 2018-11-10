@@ -1,48 +1,54 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8" />
-<title>登陆</title>
-
+	<meta charset="UTF-8" />
+	<title>管理用户</title>
 </head>
-<body>
 
+<body style="text-align: center;">
 	<div th:replace="base :: header"></div>
-	<h2>管理用户</h2>
-
-	<table class="table table-striped">
-		<thead>
-			<tr>
-				<td class="active">id</td>
-				<td class="success">姓名</td>
-				<td class="warning">密码</td>
-				<td class="warning">删除用户</td>
-			</tr>
-		</thead>
-		<tbody>
-			<div>
-				<tr th:each="user: ${userList}">
-					<td th:text="${user.id}"></td>
-					<td th:text="${user.username}"></td>
-					<td th:text="${user.password}"></td>
-					<td><a th:href="@{/user/delete(id=${user.id})}">删除</a></td>
+	<h4>管理用户</h4>
+	<div style="text-align:center">
+		<table class="table table-striped" style="width: 90%;margin:auto">
+			<thead>
+				<tr>
+					<td class="active">id</td>
+					<td class="success">姓名</td>
+					<td class="warning">密码</td>
+					<td class="warning">删除用户</td>
 				</tr>
-			</div>
-		</tbody>
-	</table>
-
-
-
-	<form class="form-horizontal" th:action="@{/user/add}" method="post">
-		<input type="text" class="form-control" name="username" id="username"
-			placeholder="用户名" /> <input type="text" class="form-control"
-			name="password" id="password" placeholder="密码" /> <input
-			type="submit" value="增加用户" class="btn btn-info" />
-	</form>
+			</thead>
+			<tbody>
+				<div>
+					<tr th:each="user: ${userList}">
+						<td th:text="${user.id}"></td>
+						<td th:text="${user.username}"></td>
+						<td th:text="${user.password}"></td>
+						<td><a th:href="@{/user/delete(id=${user.id})}">删除</a></td>
+					</tr>
+				</div>
+			</tbody>
+		</table>
+		<form class="form-horizontal" id="addUserForm" th:action="@{/user/add}" method="post">
+			用户名：<input type="text" class="form-control" name="username" id="username" placeholder="用户名" />
+			密码：<input type="text" class="form-control" name="password" id="password" placeholder="密码" />
+			<input type="button" value="增加用户" class="btn btn-primary" onclick="check()" />
+		</form>
+		<span th:text="${errorString}"></span>
+	</div>
 
 </body>
-<script th:src="@{/js/jquery-1.9.1.min.js}"></script>
-<script type="text/javascript">
-	
+<script type="text/javascript" th:inline="javascript">
+	function check() {
+		var userName = $("#username").val();
+		var passWord = $("#password").val();
+		if ("" == passWord || "" == userName || passWord.indexOf(" ") >= 0 || userName.indexOf(" ") >= 0) {
+			alert("账号密码不能为空且不能包含空格！");
+		} else {
+			$('#addUserForm').submit();
+		}
+	};
 </script>
+
 </html>

@@ -1,22 +1,43 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8" />
-<title>密码修改</title>
-</head>
-<body>
 
+<head>
+	<meta charset="UTF-8" />
+	<title>密码修改</title>
+
+</head>
+
+<body style="text-align: center;">
 	<div th:replace="base :: header"></div>
 	<h2>修改密码</h2>
-	<form class="form-horizontal" th:action="@{/user/update}" method="post">
-		<p>用户名<input type="text" class="form-control" name="username" id="username" th:value="${session.user.username}"/></p> 
-		<p>新密码：<input type="text" class="form-control" name="password" id="password" placeholder="新密码" /></p> 
+	<form id="confirmEditForm" class="form-horizontal" th:action="@{/user/update}" method="post">
+		<p>&#12288;用户名：<input type="text" class="form-control" name="username" id="username" disabled="disabled" th:value="${session.user.username}" /></p>
+		<p>&#12288;新密码：<input type="text" class="form-control" name="password" id="password" placeholder="新密码" /></p>
 		<p>重复密码：<input type="text" class="form-control" name="password1" id="password1" placeholder="重复密码" /></p>
-		<p><input type="submit" value="确认修改" class="btn btn-info" /></p>
+		<p>&#12288;&#12288;&#12288;&#12288;&#12288;<input value="确认修改" class="btn btn-info" onclick="check()" /></p>
 	</form>
-</body>
+	<div th:replace="base :: footer"></div>
 
-<script type="text/javascript">
-	
+</body>
+<script type="text/javascript" th:inline="javascript">
+	function check() {
+		var serverUserName = [[${ session }]].user.username;
+		var userName = $("#username").val();
+		// 防止f12进行修改
+		if (serverUserName != userName) {
+			alert("账号有误，请勿修改！");
+			return;
+		}
+		var newPassWord = $("#password").val();
+		var confirmPassWord = $("#password1").val();
+		if ("" == newPassWord || "" == confirmPassWord || newPassWord.indexOf(" ") >= 0 || confirmPassWord.indexOf(" ") >= 0) {
+			alert("密码不能为空且不能包含空格！");
+		} else if (newPassWord != confirmPassWord) {
+			alert("输入密码必须相同！");
+		} else {
+			$('#confirmEditForm').submit();
+		}
+	};
 </script>
+
 </html>

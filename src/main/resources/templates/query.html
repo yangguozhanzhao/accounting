@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8" />
-<title>登陆</title>
+	<meta charset="UTF-8" />
+	<title>查询档案</title>
 
 </head>
-<body>
 
+<body style="text-align: center;">
 	<div th:replace="base :: header"></div>
-	<h2>查询数据</h2>
+
 	<table class="table table-striped">
 		<thead>
 			<tr>
@@ -22,22 +23,21 @@
 		</thead>
 		<tbody>
 			<div>
-				<tr th:each="voucher: ${recentVouchers.content}">
-					<td th:text="${voucher.id}"></td>
-					<td th:text="${voucher.recordDate}"></td>
-					<td><img th:src="${voucher.imagePath}" height="50" /></td>
-					<td th:text="${voucher.content}"></td>
-					<td>上传者</td>
-					<td th:text="${voucher.createTime}"></td>
-					<td><a th:href="@{/voucher/delete(id=${voucher.id})}">删除</a></td>
-				</tr>
+				<span th:if="${recentVouchers!=null and recentVouchers.content!=null}">
+					<tr th:each="voucher: ${recentVouchers.content}">
+						<td th:text="${voucher.id}"></td>
+						<td th:text="${voucher.recordDate}"></td>
+						<td><img th:src="${voucher.imagePath}" height="50" /></td>
+						<td th:text="${voucher.content}"></td>
+						<td>上传者</td>
+						<td th:text="${voucher.createTime}"></td>
+						<td><a th:href="@{/voucher/delete(id=${voucher.id})}">删除</a></td>
+					</tr>
+				</span>
 			</div>
 		</tbody>
 	</table>
 
-
+	<div th:replace="base :: footer"></div>
 </body>
-<script type="text/javascript">
-	
-</script>
 </html>
