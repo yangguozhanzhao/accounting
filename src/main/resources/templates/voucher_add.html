@@ -9,6 +9,73 @@
 <title>扫描凭据</title>
 
 <script th:inline="javascript">
+	
+</script>
+</head>
+
+<body onload="Load()" onunload="Unload()" style="text-align: center;">
+
+
+	<div th:replace="base :: header"></div>
+	<div>
+		<div style="width: 40%; float: left;">
+			<object id="video" type="application/x-eloamplugin" width="456"
+				height="342" name="view"></object>
+			<div>
+				<input class="submit_01" type="button" value="打开摄像头"
+					onclick="OpenVideo()" /> <input class="submit_01" type="button"
+					value="关闭摄像头" onclick="CloseVideo()" /> <input id="Deskew"
+					type="checkbox" checked="checked" onclick="Deskew(this)" />自动纠偏 <input
+					id="OCR" checked="checked" type="checkbox" />文字识别
+			</div>
+			<iframe id="uf-frame" name="uf-frame"
+				style="width: 1px; height: 0px;"></iframe>
+			<form id="voucher-form" class="form-horizontal"
+				enctype="multipart/form-data" th:action="@{/voucher/add}"
+				method="post" target="uf-frame">
+				<input type="file" id="uploadImage" name="file"
+					style="width: 1px; height: 0px;" />
+				<div>
+					<p>文字识别的内容如下</p>
+					<textarea id="OCRtext" name="content"
+						style="width: 95%; height: 150px;"></textarea>
+				</div>
+				<div>
+					设置记账日期：<input id="datepicker" type="text" name="recordDate" /> <input
+						class="btn btn-primary" type="button" value="拍照" onclick="Scan()" />
+					<input class="btn btn-success" type="button" value="保存"
+						onclick="uploadVoucher()" />
+				</div>
+			</form>
+
+
+		</div>
+
+		<div style="width: 60%; float: right;">
+			<object id="image" type="application/x-eloamplugin" width="730"
+				height="547" name="view"></object>
+
+
+
+		</div>
+	</div>
+
+	<div>
+		<table class="table table-striped" style="width: 80%" align="center">
+			<thead>
+
+			</thead>
+			<tbody>
+
+			</tbody>
+		</table>
+
+	</div>
+	<div th:replace="base :: footer"></div>
+
+</body>
+<script th:inline="javascript">
+	//<![CDATA[
 	var DeviceMain;//主头
 	var Video;//视频
 	var PicPath;
@@ -74,7 +141,6 @@
 		//type设备类型， 1 表示视频设备， 2 表示音频设备
 		//idx设备索引
 		//dbt 1 表示设备到达， 2 表示设备丢失
-		console.log("load....");
 		addEvent(plugin(), 'DevChange', function(type, idx, dbt) {
 			if (1 == type)//视频设备
 			{
@@ -159,20 +225,20 @@
 			var img = plugin().Video_CreateImageList(Video, 0, 0);
 			if (img) {
 				img = plugin().ImageList_GetImage(img, 0)
-				var Name = "C:\\" + GetTimeString() + ".jpg";
+				var Name = "C:\\scan\\" + GetTimeString() + ".jpg";
 				var b = plugin().Image_Save(img, Name, 0);
 				if (b) {
 					view().View_PlayCaptureEffect();
 
 					thumb().View_SelectImage(img);
 					PicPath = Name;
-					console.log(PicPath);
-					document.getElementById('image').value = PicPath;
+					console.log("picpath=" + PicPath);
+					setImage(PicPath);
 
 					if (isOCR) {
 						plugin().Global_DiscernOcr(1, img);
-						var b = plugin().Global_WaitOcrDiscern();
-						if (b) {
+						var a = plugin().Global_WaitOcrDiscern();
+						if (a) {
 							thumb().View_SetText("", 0);
 							ocr_text = plugin().Global_GetOcrPlainText(0);
 							ocr_text = ocr_text.replace(/,/g, "");
@@ -183,9 +249,12 @@
 					}
 				}
 				plugin().Image_Release(img);
+
 			}
 		}
 	}
+
+
 
 	// 自动裁剪
 	function Deskew(obj) {
@@ -219,83 +288,107 @@
 			alert("请先拍照！");
 		}
 	}
-</script>
-</head>
 
-<body onload="Load()" onunload="Unload()">
+	// 有窗口弹出
+	function setImage(path) {
+		var image_input_obj = document.getElementById("uploadImage");
+		image_input_obj.focus();
+		var WshShell = new ActiveXObject("WScript.Shell");
+		WshShell.SendKeys("{Tab}");
+		WshShell.SendKeys("{ }");
+		WshShell.SendKeys(path);
+		WshShell.SendKeys("{Enter}");
+		WshShell.SendKeys("{Enter}");
+		WshShell.SendKeys("{Enter}");
+	}
 
-	<div th:replace="base :: header"></div>
-	<div style="width: 60%; float: left;">
-		<object id="video" type="application/x-eloamplugin" width="456"
-			height="342" name="view"></object>
-	</div>
+	// IE8 的file不能粘贴，其他input可以
+	function setImage1(path) {
+		var image_input_obj = document.getElementById("uploadImage1");
+		image_input_obj.focus();
+		var WshShell = new ActiveXObject("WScript.Shell");
+		window.clipboardData.setData('text', path);
+		WshShell.sendKeys("^a");
+		WshShell.sendKeys("^v");
 
-	<div style="width: 40%; float: right;">
-		<div>
+	}
+	
+	// 校验与上传
+	function uploadVoucher() {
+		var image = $('#uploadImage').val();
+		var recordDate = $("#datepicker").val();
 
-			<input class="submit_01" type="button" value="打开摄像头"
-				onclick="OpenVideo()" /> <input class="submit_01" type="button"
-				value="关闭摄像头" onclick="CloseVideo()" />
-			<div>
-				自动纠偏<input id="Deskew" type="checkbox" checked="checked"
-					onclick="Deskew(this)" />
-			</div>
-			<div>
-				文字识别<input id="OCR" checked="checked" type="checkbox" />
-			</div>
-		</div>
-		<object id="image" type="application/x-eloamplugin" width="730"
-			height="547" name="view"></object>
+		if ("" == recordDate || "" == image) {
+			alert("记账日期和凭证图片不能为空");
+		} else {
+			if (image.split(".").pop() != "jpg") {
+				alert("日报只能为jpg格式");
+			} else {
+				$('#voucher-form').submit();
+				console.log("上传凭证报表");
+			}
+		}
+	}
+	
+/* 	 $(document).ready(function() {
+		 loadRecentVouchers();
+	 }); */
 
-
-		<div>扫描的凭证图片</div>
-		<iframe id="uf-frame" name="uf-frame"></iframe>
-		<form id="voucher-form" class="form-horizontal" enctype="multipart/form-data"
-			th:action="@{/voucher/add}" method="post" target="uf-frame">
-			<input type="file" id="image" name="file" />
-			<div>
-				识别的记账内容：
-				<textarea id="OCRtext" name="content"
-					style="width: 80%; height: 200px;"></textarea>
-			</div>
-			<div>
-				设置记账日期：<input id="datepicker" type="text" name="recordDate" />
-			</div>
-			<input class="submit_01" type="button" value="拍照" onclick="Scan()" />
-			<input id="upload" type="button"  value="确认" class="btn btn-info" />
-		</form>
-		
-		
-	</div>
-	<div th:replace="base :: footer"></div>
-
-</body>
-<script>
+	function loadRecentVouchers()
+	{	
+		var str="";
+		$.ajax({
+			type: 'GET',
+			contentType: "application/json",
+			url: "/voucher/recent",
+			dataType: 'json',
+			cache: false,
+			timeout: 600000,
+			success: function(data){
+				if(data!=null && data.content!=null ){
+					var voucherList = data.content;
+					console.log(voucherList[0].content)					
+					for(var i= 0;voucherList.length>i;i++ ){
+					var tr= document.createElement('tr');
+                	var dateTd = document.createElement('td');
+                	var imgTd = document.createElement('td');
+                	var contentTd = document.createElement('td');
+                	var userTd = document.createElement('td');
+                	var timeTd = document.createElement('td');
+                	var deleteTd = document.createElement('td');
+                    dateTd.innerHTML=voucherList[i].recordDate;
+                    imgTd.innerHTML="<img src="+voucherList[i].imagePath+" style='height:50px;'"+" />";
+                    contentTd.innerHTML=voucherList[i].content;
+                    userTd.innerHTML=voucherList[i].user.username;
+                    timeTd.innerHTML=voucherList[i].createTime;
+                    deleteTd.innerHTML="<a href='delete/"+voucherList[i].id+"' >删除</a>";
+                    tr.appendChild(dateTd);
+                    tr.appendChild(imgTd);
+                    tr.appendChild(contentTd);
+                    tr.appendChild(userTd);
+                    tr.appendChild(timeTd);
+                    tr.appendChild(deleteTd);
+					document.getElementsByTagName("tbody")[0].appendChild(tr);
+					}
+					
+				}
+			}
+		});
+	}
+	
+	
+	//日期选择插件
 	$('#datepicker').datepicker({
 		todayBtn : "linked",
 		language : "zh-CN",
 		orientation : "top auto",
 		autoclose : true
 	})
-	
-	
-	// 校验
-	$('#upload').on('click', function (e) {
-	   $('#voucher-form').submit();
-	   console.log("上传凭证");
-	});
-	
+
 	//监听frame的load事件判断是否有返回信息
- 	$('#uf-frame').on('load', function () {
- 		console.log("load in iframe");
-	    var response = $("#uf-frame").contents().find("body").html();
-	    console.log(response);
-	
+	$('#uf-frame').on('load', function() {
 	});
-		
-
-
+	//]]>
 </script>
-
 
 </html>

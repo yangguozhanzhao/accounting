@@ -8,6 +8,8 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -34,6 +36,10 @@ public class Voucher {
     @Column(nullable = false,name="recordDate")
     private Date recordDate;
     
+    @ManyToOne(targetEntity=User.class)
+	@JoinColumn(nullable=false)
+	private User user;
+    
     @CreatedDate
     private Date createTime;
     @LastModifiedDate
@@ -42,11 +48,12 @@ public class Voucher {
     public Voucher () {
 		
 	}
-    public Voucher(Date recordDate,String imagePath,String content) {
+    public Voucher(Date recordDate,String imagePath,String content,User user) {
         
         this.imagePath=imagePath;
         this.recordDate=recordDate;
         this.content=content;
+        this.user=user;
     }
 
     public Long getId() {
@@ -81,6 +88,14 @@ public class Voucher {
     public void setRecordDate(Date recordDate) {
         this.recordDate = recordDate;
     }
+    
+    public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
     
     public Date getCreateTime() {
     	return createTime;

@@ -8,6 +8,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -28,10 +29,11 @@ public class Report {
 	private Date recordDate;
 
 	// csv 文件
-	@Column(nullable = false, name = "filePath")
+	@Column(nullable = false,unique = true, name = "filePath")
 	private String filePath;
 	
-	@ManyToOne
+	@ManyToOne(targetEntity=User.class)
+	@JoinColumn(nullable=false)
 	private User user;
 
 	@CreatedDate
@@ -66,11 +68,11 @@ public class Report {
 		this.user = user;
 	}
 
-	public String getfilePath() {
+	public String getFilePath() {
 		return filePath;
 	}
 
-	public void setfilePath(String filePath) {
+	public void setFilePath(String filePath) {
 		this.filePath = filePath;
 	}
 

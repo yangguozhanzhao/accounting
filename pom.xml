@@ -55,13 +55,6 @@
 			<optional>true</optional>
 		</dependency>
 
-		<dependency>
-			<!-- IE不刷新弹窗题问 -->
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-
-
 	</dependencies>
 
 	<build>

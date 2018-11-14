@@ -1,5 +1,6 @@
 package com.accounting.service;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.ui.Model;
 
 import com.accounting.dao.ReportDao;
 import com.accounting.entity.Report;
+import com.accounting.entity.Voucher;
 
 @Service
 public class ReportService {
@@ -29,5 +31,11 @@ public class ReportService {
     public Report findById(Long id) {
     	return reportDao.findOne(id);
     }
+    
+    public Page<Report> findRecent() {
+    	PageRequest pageable =new PageRequest(0,10,Direction.DESC,"createTime");
+    	Page<Report> reports = reportDao.findAll(pageable);
+        return reports;
+	}
     
 }

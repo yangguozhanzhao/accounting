@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<title>查询档案</title>
+<style type="text/css">
+@media print {
+	.noprint {
+		display: none;
+	}
+}
+</style>
+</head>
+
+<body style="text-align: center;">
+	<object id="WebBrowser" height="0" width="0"
+		classid="CLSID:8856F961-340A-11D0-A96B-00C04FD705A2" name="wb">
+	</object>
+	<div class="noprint">
+		<div th:replace="base :: header"></div>
+	</div>
+
+	<div class="noprint">
+		<input class="btn btn-primary" type="button" value="打印凭证" onclick="print()" /> 
+		<a th:href="@{'/voucher/prev/'+${voucher.id}}" th:text="上一个" > </a>
+		<a th:href="@{'/voucher/next/'+${voucher.id}}" th:text="下一个"> </a>
+	</div>
+
+	<div>
+		<p class="noprint"
+			th:text="${#dates.format(voucher.recordDate,'yyyy-MM-dd')}"></p>
+		<p class="noprint" th:text="${voucher.content}"></p>
+		<img id="image" style="width: 80%" th:src="${voucher.imagePath}" />
+	</div>
+
+	<div class="noprint">
+		<div th:replace="base :: footer"></div>
+	</div>
+
+</body>
+<script th:inline="javascript">
+	//<![CDATA[
+	function print() {
+		document.getElementById("WebBrowser").execWB(7, 1);
+	}
+	
+	
+	
+
+	//]]>
+</script>
+</html>

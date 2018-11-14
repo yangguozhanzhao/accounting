@@ -29,10 +29,14 @@ public class VoucherService {
     public Voucher findById(Long id) {
     	return voucherDao.findOne(id);
     }
+    public Boolean existsById(Long id) {
+    	return voucherDao.exists(id);
+    }
     
     public Page<Voucher> findRecent() {
     	PageRequest pageable =new PageRequest(0,20,Direction.DESC,"createTime");
     	Page<Voucher> vouchers = voucherDao.findAll(pageable);
         return vouchers;
 	}
+    
 }

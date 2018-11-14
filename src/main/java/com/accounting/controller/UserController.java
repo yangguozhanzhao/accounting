@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.w3c.dom.css.ElementCSSInlineStyle;
 
 import com.accounting.entity.User;
+import com.accounting.entity.Voucher;
 import com.accounting.service.UserService;
 
 @Controller
@@ -32,7 +34,7 @@ public class UserController {
 		if(session.getAttribute("user")==null) {
 			return "index";
 		} else {
-			return "query";
+			return "redirect:/toQuery";
 		}
 	}
 	
@@ -44,7 +46,7 @@ public class UserController {
 			return "index";
 		}else {
 			session.setAttribute("user", user);
-			return "query";
+			return "redirect:/toQuery";
 		}
 	}
 	
