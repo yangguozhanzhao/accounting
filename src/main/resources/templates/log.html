@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<title>查询档案</title>
+<style type="text/css">
+</style>
+</head>
+
+<body style="text-align: center;">
+	<div th:replace="base :: header"></div>
+	<div>
+		<form id="search" class="form-search" th:action="@{/logQuery/}"
+			method="post">
+			<input name="pageNum" value="1" type="hidden" /> 日志日期范围：<input
+				type="text" id="datepicker1" name="startDate"
+				class="input-medium search-query"
+				th:value="${startDate!=null? startDate : ''}" /> 到<input
+				type="text" id="datepicker2" name="endDate"
+				class="input-medium search-query"
+				th:value="${endDate!=null? endDate : ''}" /> 
+				关键字：<input id="key" style="width: 200px;" name="content" type="text" class="input-medium search-query" th:value="${content!=null? content : ''}" />
+				用户名：<input id="key" style="width: 100px;" name="username" type="text" class="input-medium search-query" th:value="${username!=null? username : ''}" />
+				<input type="button" id="upload" class="btn btn-primary" value="搜索" />
+		</form>
+	</div>
+
+	<!-- 所有日志-->
+	<div th:if="${allPage !=null }">
+
+		<table class="table table-striped" style="width: 80%" align="center">
+			<caption>查询到符合结果的操作日志</caption>
+			<thead>
+				<tr>
+					<td class="success">序号</td>
+					<td class="success">时间</td>
+					<td class="warning">操作</td>
+					<td class="warning">操作者</td>
+				</tr>
+			</thead>
+			<tbody>
+				<div>
+					<span th:if="${allPage.content!=null}">
+						<tr th:each="log: ${allPage.content}">
+							<td th:text="${log.id}"></td>
+							<td th:text="${#dates.format(log.createTime,'yyyy-MM-dd HH:mm:ss')}"></td>
+							<td style="width: 50%"
+								th:text="${log.content}"></td>
+							<td th:text="${log.user.username}"></td>
+						</tr>
+					</span>
+				</div>
+
+			</tbody>
+		</table>
+		<div class="pagination pagination-lg">
+			<ul>
+				<li th:class="${allPage.first? 'disabled' : ''}"><a
+					th:href="@{'/log/'+${allPage.number}}">上一页</a></li>
+				<li th:if="${allPage.number-2 ge 0}"><a
+					th:href="@{'/log/'+${allPage.number-1}}"
+					th:text="${allPage.number-1}"></a></li>
+				<li th:if="${allPage.number-1 ge 0}"><a
+					th:href="@{'/log/'+${allPage.number}}"
+					th:text="${allPage.number}"></a></li>
+				<li class="active"><a href="#" th:text="${allPage.number+1}">1</a></li>
+				<li th:if="${allPage.number+1 le allPage.totalPages}"><a
+					th:href="@{'/log/'+ ${allPage.number+2}}"
+					th:text="${allPage.number+2}">1</a></li>
+				<li th:if="${allPage.number+2 le allPage.totalPages}"><a
+					th:href="@{'/log/'+ ${allPage.number+2}}"
+					th:text="${allPage.number+3}">1</a></li>
+				<li th:class="${allPage.last?'disabled' : ''}"><a
+					th:href="@{'/log/'+ ${allPage.number+2}}">下一页</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<!-- 查询日志-->
+	<div th:if="${lPage !=null }">
+
+		<table class="table table-striped" style="width: 80%" align="center">
+			<caption>查询到符合结果的操作日志</caption>
+			<thead>
+				<tr>
+					<td class="success">序号</td>
+					<td class="success">时间</td>
+					<td class="warning">操作</td>
+					<td class="warning">操作者</td>
+				</tr>
+			</thead>
+			<tbody>
+				<div>
+					<span th:if="${lPage.content!=null}">
+						<tr th:each="log: ${lPage.content}">
+							<td th:text="${log.id}"></td>
+							<td th:text="${#dates.format(log.createTime,'yyyy-MM-dd HH:mm:ss')}"></td>
+							<td style="width: 50%"
+								th:text="${log.content}"></td>
+							<td th:text="${log.user.username}"></td>
+						</tr>
+					</span>
+				</div>
+
+			</tbody>
+		</table>
+		<div class="pagination pagination-lg">
+			<ul>
+				<li th:class="${lPage.first? 'disabled' : ''}"><a
+					th:href="@{/logQuery(pageNum=${lPage.number},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}">上一页</a></li>
+				<li th:if="${lPage.number-2 ge 0}"><a
+					th:href="@{/logQuery(pageNum=${lPage.number-1},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
+					th:text="${lPage.number-1}"></a></li>
+				<li th:if="${lPage.number-1 ge 0}"><a
+					th:href="@{/logQuery(pageNum=${lPage.number},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
+					th:text="${lPage.number}"></a></li>
+				<li class="active"><a href="#" th:text="${lPage.number+1}">1</a></li>
+				<li th:if="${lPage.number+1 le lPage.totalPages}"><a
+					th:href="@{/logQuery(pageNum=${lPage.number+2},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
+					th:text="${lPage.number+2}">1</a></li>
+				<li th:if="${lPage.number+2 le lPage.totalPages}"><a
+					th:href="@{/logQuery(pageNum=${lPage.number+3},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
+					th:text="${lPage.number+3}">1</a></li>
+				<li th:class="${lPage.last?'disabled' : ''}"><a
+					th:href="@{/logQuery(pageNum=${lPage.number+2},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}">下一页</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<div th:replace="base :: footer"></div>
+</body>
+
+<script th:inline="javascript">
+	$('#datepicker1').datepicker({
+		todayBtn : "linked",
+		language : "zh-CN",
+		orientation : "bottom auto",
+		autoclose : true
+	})
+	$('#datepicker2').datepicker({
+		todayBtn : "linked",
+		language : "zh-CN",
+		orientation : "bottom auto",
+		autoclose : true
+	})
+
+	// 校验记账日期和文件不为空
+	$('#upload').on('click', function(e) {
+		var recordDate1 = $("#datepicker1").val();
+		var recordDate2 = $("#datepicker2").val();
+		var key = $("#key").val();
+		var radio = $("input[name='optionsRadios']:checked").val();
+
+		if (recordDate1 == "" || recordDate2 == "") {
+			alert("必须选择记账日期范围");
+		} else {
+			$('#search').submit();
+		}
+	});
+</script>
+
+</html>

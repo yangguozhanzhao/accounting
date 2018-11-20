@@ -11,18 +11,32 @@
 <body style="text-align: center;">
 	<div th:replace="base :: header"></div>
 	<div>
-		<form class="form-search" th:action="@{/query}" method="post">
-			记账日期范围：<input type="text" id="datepicker1" name="recordDate1" class="input-medium search-query" /> 
-			到<input type="text" id="datepicker2" name="recordDate2" class="input-medium search-query" /> 
-			关键字：<input id="key" style="width:300px;" name="key" type="text" class="input-medium search-query" />
-			<label class="radio"> <input type="radio" name="optionsRadios" id="option1" value="voucher" checked="checked"/>凭证</label> 
-			<label class="radio"> <input type="radio" name="optionsRadios" id="option2" value="report" /> 日报 </label>
-			<button  id="upload" class="btn btn-primary">搜索</button>
+		<form id="search" class="form-search" th:action="@{/query/}"
+			method="post">
+			<input name="pageNum" value="1" type="hidden" /> 记账日期范围：<input
+				type="text" id="datepicker1" name="recordDate1"
+				class="input-medium search-query"
+				th:value="${startDate!=null? startDate : ''}" /> 到<input
+				type="text" id="datepicker2" name="recordDate2"
+				class="input-medium search-query"
+				th:value="${endDate!=null? endDate : ''}" /> 关键字：<input id="key"
+				style="width: 300px;" name="key" type="text"
+				class="input-medium search-query"
+				th:value="${content!=null? content : ''}" /> <label class="radio">
+				<input type="radio" name="optionsRadios" id="option1"
+				value="voucher" th:checked="${radio=='report'? 'false' : 'true' }"  onclick="setContent()"/>凭证
+			</label> <label class="radio"> <input type="radio"
+				name="optionsRadios" id="option2" value="report"
+				th:checked="${radio=='report'? 'true' : 'false' }" onclick="setContent()"/> 日报
+			</label> <input type="button" id="upload" class="btn btn-primary" value="搜索" />
 		</form>
 	</div>
 
-	<table class="table table-striped" style="width: 80%" align="center">
-		<caption>最近上传凭证</caption>
+	<!-- 近期的20条凭证记录  -->
+	<table th:if="${recentVouchers!=null}" class="table table-striped"
+		style="width: 80%" align="center">
+		
+		<caption><h5>最近上传凭证</h5></caption>
 		<thead>
 			<tr>
 				<td class="success">记账日期</td>
@@ -34,8 +48,7 @@
 		</thead>
 		<tbody>
 			<div>
-				<span
-					th:if="${recentVouchers!=null and recentVouchers.content!=null}">
+				<span th:if="${recentVouchers.content!=null}">
 					<tr th:each="voucher: ${recentVouchers.content}">
 						<td th:text="${#dates.format(voucher.recordDate,'yyyy-MM-dd')}"></td>
 						<td><a th:href="@{'/voucher/voucher/'+${voucher.id}}"><img
@@ -45,12 +58,125 @@
 						<td th:text="${voucher.user.username}"></td>
 						<td
 							th:text="${#dates.format(voucher.createTime,'yyyy-MM-dd　HH:mm:ss')}"></td>
-						<td><a th:href="@{'/voucher/delete/'+${voucher.id}}">删除</a></td>
+						<td th:if="${session.user.username==voucher.user.username and {#dates.format(new java.util.Date().getTime(),'yyyyMMdd') == #dates.format(voucher.createTime,'yyyyMMdd')}}"><a th:href="@{'/voucher/delete/'+${voucher.id}}">删除</a></td>
 					</tr>
 				</span>
 			</div>
 		</tbody>
 	</table>
+
+
+	<!-- 查询的凭证-->
+	<div th:if="${vPage !=null }">
+
+		<table class="table table-striped" style="width: 80%" align="center">
+			<caption><h5>查询到符合条件的凭证</h5></caption>
+			<thead>
+				<tr>
+					<td class="success">记账日期</td>
+					<td class="warning">凭证图片</td>
+					<td class="success">OCR内容</td>
+					<td class="warning">上传者</td>
+					<td class="warning">上传时间</td>
+				</tr>
+			</thead>
+			<tbody>
+				<div>
+					<span th:if="${vPage.content!=null}">
+						<tr th:each="voucher: ${vPage.content}">
+							<td th:text="${#dates.format(voucher.recordDate,'yyyy-MM-dd')}"></td>
+							<td><a th:href="@{'/voucher/voucher/'+${voucher.id}}"><img
+									th:src="@{${voucher.imagePath}}" style="height: 50px;" /></a></td>
+							<td style="width: 50%"
+								th:text="${#strings.length(voucher.content)} &lt;150? ${voucher.content} : ${#strings.substring(voucher.content,0,150)}+'...'"></td>
+							<td th:text="${voucher.user.username}"></td>
+							<td
+								th:text="${#dates.format(voucher.createTime,'yyyy-MM-dd　HH:mm:ss')}"></td>
+							<td th:if="${session.user.username==voucher.user.username and {#dates.format(new java.util.Date().getTime(),'yyyyMMdd') == #dates.format(voucher.createTime,'yyyyMMdd')}}"><a th:href="@{'/voucher/delete/'+${voucher.id}}">删除</a></td>
+						</tr>
+					</span>
+				</div>
+
+			</tbody>
+		</table>
+		<div class="pagination pagination-lg">
+			<ul>
+				<li th:class="${vPage.first? 'disabled' : ''}"><a th:if="${!vPage.first}"
+					th:href="@{/query(pageNum=${vPage.number},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}">上一页</a><a th:if="${vPage.first}"
+					href="#">上一页</a></li>
+				<li th:if="${vPage.number-2 ge 0}"><a
+					th:href="@{/query(pageNum=${vPage.number-1},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${vPage.number-1}"></a></li>
+				<li th:if="${vPage.number-1 ge 0}"><a
+					th:href="@{/query(pageNum=${vPage.number},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${vPage.number}"></a></li>
+				<li class="active"><a href="#" th:text="${vPage.number+1}">1</a></li>
+				<li th:if="${vPage.number+1 lt vPage.totalPages}"><a
+					th:href="@{/query(pageNum=${vPage.number+2},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${vPage.number+2}">1</a></li>
+				<li th:if="${vPage.number+2 lt vPage.totalPages}"><a
+					th:href="@{/query(pageNum=${vPage.number+3},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${vPage.number+3}">1</a></li>
+				<li th:class="${vPage.last?'disabled' : ''}"><a th:if="${!vPage.last}"
+					th:href="@{/query(pageNum=${vPage.number+2},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}">下一页</a><a th:if="${vPage.last}"
+					href="#">下一页</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<!-- 查询的日报-->
+	<div th:if="${rPage !=null }">
+
+		<table class="table table-striped" style="width: 80%" align="center">
+			<caption><h5>查询到符合条件的日报</h5></caption>
+			<thead>
+				<tr>
+					<td class="success">记账日期</td>
+					<td class="warning">日报名称图片</td>
+					<td class="warning">上传者</td>
+					<td class="warning">上传时间</td>
+				</tr>
+			</thead>
+			<tbody>
+				<div>
+					<span th:if="${rPage.content!=null}">
+						<tr th:each="report: ${rPage.content}">
+							<td th:text="${#dates.format(report.recordDate,'yyyy-MM-dd')}"></td>
+							<td><a th:href="@{'/report/report/'+${report.id}}" th:text="${#strings.arraySplit(report.filePath,'_')[1]}"></a></td>
+							<td th:text="${report.user.username}"></td>
+							<td
+								th:text="${#dates.format(report.createTime,'yyyy-MM-dd　HH:mm:ss')}"></td>
+							<td th:if="${session.user.username==report.user.username and {#dates.format(new java.util.Date().getTime(),'yyyyMMdd') == #dates.format(report.createTime,'yyyyMMdd')}}"><a th:href="@{'/report/delete/'+${report.id}}">删除</a></td>
+						</tr>
+					</span>
+				</div>
+
+			</tbody>
+		</table>
+		<div class="pagination pagination-lg">
+			<ul>
+				<li th:class="${rPage.first? 'disabled' : ''}"><a th:if="${!rPage.first}"
+					th:href="@{/query(pageNum=${rPage.number},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}">上一页</a><a th:if="${rPage.first}"
+					href="#">上一页</a></li>
+				<li th:if="${rPage.number-2 ge 0}"><a
+					th:href="@{/query(pageNum=${rPage.number-1},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${rPage.number-1}"></a></li>
+				<li th:if="${rPage.number-1 ge 0}"><a
+					th:href="@{/query(pageNum=${rPage.number},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${rPage.number}"></a></li>
+				<li class="active"><a href="#" th:text="${rPage.number+1}">1</a></li>
+				<li th:if="${rPage.number+1 lt rPage.totalPages}"><a
+					th:href="@{/query(pageNum=${rPage.number+2},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${rPage.number+2}">1</a></li>
+				<li th:if="${rPage.number+2 lt rPage.totalPages}"><a
+					th:href="@{/query(pageNum=${rPage.number+3},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}"
+					th:text="${rPage.number+3}">1</a></li>
+				<li th:class="${rPage.last?'disabled' : ''}"><a th:if="${!rPage.last}"
+					th:href="@{/query(pageNum=${rPage.number+2},recordDate1=${startDate},recordDate2=${endDate},key=${content},optionsRadios=${radio})}">下一页</a><a th:if="${rPage.last}"
+					href="#">下一页</a></li>
+			</ul>
+		</div>
+	</div>
 
 	<div th:replace="base :: footer"></div>
 </body>
@@ -67,7 +193,18 @@
 		language : "zh-CN",
 		orientation : "bottom auto",
 		autoclose : true
-	})
+	});
+	
+	
+	
+	function setContent(){
+		var radio = $("input[name='optionsRadios']:checked").val();
+		
+		if(radio=="report"){
+			$('#key').val('')
+		}
+	}
+
 
 	// 校验记账日期和文件不为空
 	$('#upload').on('click', function(e) {
@@ -75,12 +212,15 @@
 		var recordDate2 = $("#datepicker2").val();
 		var key = $("#key").val();
 		var radio = $("input[name='optionsRadios']:checked").val();
-		
-		if (recordDate1=="" || recordDate2==""){
-			alert("必须选择记账日期范围")
-		}else{
-			$('#form-search').submit();	
+		if(radio=="report"){
+			$('#key').val('')
+		}
+		if (recordDate1 == "" || recordDate2 == "") {
+			alert("必须选择记账日期范围");
+		} else {
+			$('#search').submit();
 		}
 	});
 </script>
+
 </html>

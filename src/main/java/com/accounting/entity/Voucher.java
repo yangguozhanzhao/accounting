@@ -25,7 +25,7 @@ public class Voucher {
     private Long id ;
     
     // 内容,可以空
-    @Column(nullable = true,name="content")
+    @Column(nullable = true,name="content", columnDefinition = "varchar(1000)")
     private String content ;
     
     // 图片

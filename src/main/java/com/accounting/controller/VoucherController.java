@@ -1,6 +1,7 @@
 package com.accounting.controller;
 
 import java.io.BufferedOutputStream;
+import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpSession;
 
 import org.aspectj.weaver.ast.Var;
 import org.codehaus.groovy.ast.stmt.LoopingStatement;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.validator.internal.util.privilegedactions.GetClassLoader;
 import org.slf4j.Logger;
@@ -29,6 +31,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,9 +47,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.w3c.dom.css.ElementCSSInlineStyle;
 
+import com.accounting.entity.Log;
 import com.accounting.entity.Report;
 import com.accounting.entity.User;
 import com.accounting.entity.Voucher;
+import com.accounting.service.LogService;
+import com.accounting.service.ReportService;
 import com.accounting.service.VoucherService;
 
 import ch.qos.logback.core.joran.conditional.ElseAction;
@@ -55,6 +61,12 @@ import ch.qos.logback.core.joran.conditional.ElseAction;
 public class VoucherController {
 	@Autowired
 	private VoucherService voucherService;
+	
+	@Autowired
+	private LogService logService;
+	
+	@Autowired
+	private ReportService reportService;
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private String CLASSPATH = new ApplicationHome(this.getClass()).getSource().getParentFile().getPath();
 
@@ -89,9 +101,9 @@ public class VoucherController {
 			try {
 				// 上传文件路径,按照系统日期分文件夹存储
 				String imagePath = "/upload/images/";
-				String uploudDir = CLASSPATH + imagePath;
-				uploudDir = uploudDir.replace('\\', '/');
-				logger.info("path = " + uploudDir);
+				String uploadDir = CLASSPATH + imagePath;
+				uploadDir = uploadDir.replace('\\', '/');
+				logger.info("path = " + uploadDir);
 				// 上传文件名
 				String filepath = file.getOriginalFilename();
 				// 判断路径是否存在，如果不存在就创建一个
@@ -102,18 +114,19 @@ public class VoucherController {
 				} else {
 					filename = filepath;
 				}
-				File fileDir = new File(uploudDir, filename);
+				File fileDir = new File(uploadDir, filename);
 				if (!fileDir.getParentFile().exists()) {
 					fileDir.getParentFile().mkdirs();
 				}
 				// 将上传文件保存到一个目标文件当中
-				file.transferTo(new File(uploudDir + filename));
+				file.transferTo(new File(uploadDir + filename));
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
 				try {
 					Date date = sdf.parse(recordDate);
 					User user = (User) session.getAttribute("user");
 					Voucher voucher = new Voucher(date, imagePath + filename, content, user);
 					voucherService.save(voucher);
+					logService.save(new Log("扫描上传凭证"+filename,user));
 				} catch (ParseException e) {
 					// TODO Auto-generated catch block
 					logger.error("凭证保存失败");
@@ -149,35 +162,72 @@ public class VoucherController {
 	public String showRecentVouchers(Model model) {
 		Page<Voucher> voucherList = voucherService.findRecent();
 		model.addAttribute("recentVouchers", voucherList);
+		logger.info("v="+voucherList.getContent());
 		return "query";
 	}
 	
 	// 查询日报或者凭证
-	@RequestMapping(value = "query", method = RequestMethod.POST)
-	public String query(Model model,HttpServletRequest request) {
+	@RequestMapping(value = "query")
+	public String query(Model model,HttpServletRequest request) throws ParseException {
 		logger.info("query");
 		String date1=request.getParameter("recordDate1");
 		String date2=request.getParameter("recordDate2");
 		String key=request.getParameter("key");
 		String radio=request.getParameter("optionsRadios");
-		logger.info(date1+date2+key+radio);
+		String pageNum= request.getParameter("pageNum");
+		int pageSize = 20;
+		logger.info(date1+date2+key+radio+pageNum);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+		Date startDate = sdf.parse(date1);
+		Date endDate =sdf.parse(date2);
 		
-		Page<Voucher> voucherList = voucherService.findRecent();
-		model.addAttribute("recentVouchers", voucherList);
+		//查询凭证
+		if (radio.equals("report")) {
+			logger.info("searcher report");
+			logger.info("pa="+startDate+endDate+key+radio+pageNum);
+			Page<Report> rPage = reportService.findByDateR(Integer.parseInt(pageNum), pageSize, startDate, endDate);
+			logger.info("查询完毕");
+			if(rPage!=null) {
+				logger.info("结果为report="+rPage.getContent());
+				model.addAttribute("rPage", rPage);
+				model.addAttribute("startDate",date1);
+				model.addAttribute("endDate",date2);
+				model.addAttribute("content",key);
+				model.addAttribute("radio",radio);
+			} else {
+				logger.info("report 结果为空");
+			}
+		} else if(radio.equals("voucher")) {
+			
+			Page<Voucher> vPage=voucherService.findByDateAndContent(Integer.parseInt(pageNum), pageSize, startDate, endDate, key);
+			//
+			if(vPage!=null) {
+				logger.info("结果为voucher="+vPage.getContent());
+				model.addAttribute("vPage", vPage);
+				model.addAttribute("startDate",date1);
+				model.addAttribute("endDate",date2);
+				model.addAttribute("content",key);
+				model.addAttribute("radio",radio);
+			} else {
+				logger.info("voucher结果为空");
+			}
+		}
 		return "query";
-	}
+	} 
 
 	// 根据id显示详情
 	@GetMapping("voucher/voucher/{id}")
-	public String voucher(Model model, @PathVariable("id") Long id) {
+	public String voucher(Model model, @PathVariable("id") Long id,HttpSession session) {
 		Voucher voucher = voucherService.findById(id);
 		model.addAttribute("voucher", voucher);
+		User user = (User) session.getAttribute("user");
+		logService.save(new Log("查看凭证"+id,user));
 		return "voucher";
 	}
 	
 	// 根据id显示详情
 	@GetMapping("voucher/prev/{id}")
-	public String prev(Model model, @PathVariable("id") Long id) {
+	public String prev(Model model, @PathVariable("id") Long id,HttpSession session) {
 		
 		// 只能搜到10以内
 		int n = 10;
@@ -188,12 +238,14 @@ public class VoucherController {
 		}
 		Voucher voucher = voucherService.findById(id);
 		model.addAttribute("voucher", voucher);
+		User user = (User) session.getAttribute("user");
+		logService.save(new Log("查看凭证"+id,user));
 		return "redirect:/voucher/voucher/"+id;
 	}
 	
 	// 根据id显示详情
 		@GetMapping("voucher/next/{id}")
-		public String next(Model model, @PathVariable("id") Long id) {
+		public String next(Model model, @PathVariable("id") Long id,HttpSession session) {
 			
 			// 只能搜到10以内
 			int n = 10;
@@ -204,13 +256,16 @@ public class VoucherController {
 			}
 			Voucher voucher = voucherService.findById(id);
 			model.addAttribute("voucher", voucher);
+			User user = (User) session.getAttribute("user");
+			logService.save(new Log("查看凭证"+id,user));
 			return "redirect:/voucher/voucher/"+id;
 		}
-	
 
 	// 删除
-	public String report(@PathVariable("id") Long id) {
+	public String report(@PathVariable("id") Long id,HttpSession session) {
 		voucherService.delete(id);
+		User user = (User) session.getAttribute("user");
+		logService.save(new Log("删除凭证"+id,user));
 		return "redirect:/toQuery";
 	}
 

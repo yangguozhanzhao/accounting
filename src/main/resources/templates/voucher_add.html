@@ -144,6 +144,7 @@
 		addEvent(plugin(), 'DevChange', function(type, idx, dbt) {
 			if (1 == type)//视频设备
 			{
+				
 				if (1 == dbt)//设备到达
 				{
 					var deviceType = plugin().Global_GetEloamType(1, idx);
@@ -174,17 +175,25 @@
 
 		view().Global_SetWindowName("view");
 		thumb().Global_SetWindowName("view");
+		
 
 		plugin().Global_InitDevs();
-		//开启纠偏
-		if (isDeskew()) {
-			plugin().Video_EnableDeskewEx(Video, 1)
-		} else {
-			plugin().Video_DisableDeskew(Video);
-		}
+		
+		if(Video){
+			//开启纠偏
+			if (isDeskew()) {
+				plugin().Video_EnableDeskewEx(Video, 1)
+			} else {
+				plugin().Video_DisableDeskew(Video);
+			}
 
-		// OCR
-		plugin().Global_InitOcr();
+			// OCR
+			plugin().Global_InitOcr();
+			
+		} else {
+			alert("扫描设备未连接！")
+		}
+		
 
 	}
 
@@ -211,7 +220,6 @@
 		var nn = date.getMinutes().toString();
 		var ss = date.getSeconds().toString();
 		var mi = date.getMilliseconds().toString();
-
 		var ret = yy + mm + dd + hh + nn + ss + mi;
 		return ret;
 	}
@@ -232,7 +240,6 @@
 
 					thumb().View_SelectImage(img);
 					PicPath = Name;
-					console.log("picpath=" + PicPath);
 					setImage(PicPath);
 
 					if (isOCR) {
@@ -325,7 +332,6 @@
 				alert("日报只能为jpg格式");
 			} else {
 				$('#voucher-form').submit();
-				console.log("上传凭证报表");
 			}
 		}
 	}
@@ -347,7 +353,6 @@
 			success: function(data){
 				if(data!=null && data.content!=null ){
 					var voucherList = data.content;
-					console.log(voucherList[0].content)					
 					for(var i= 0;voucherList.length>i;i++ ){
 					var tr= document.createElement('tr');
                 	var dateTd = document.createElement('td');

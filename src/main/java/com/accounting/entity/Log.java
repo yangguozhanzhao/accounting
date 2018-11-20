@@ -8,6 +8,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 
@@ -27,13 +28,12 @@ public class Log {
 	private String content;
 	
 	// 操作用户
-	@ManyToOne
+	@ManyToOne(targetEntity=User.class)
+	@JoinColumn(nullable=false)
 	private User user;
 
 	@CreatedDate
 	private Date createTime;
-	@LastModifiedDate
-	private Date updateTime;
 
 	public Log() {
 

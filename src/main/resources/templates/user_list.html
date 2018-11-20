@@ -10,10 +10,9 @@
 	<div th:replace="base :: header"></div>
 	<h4>管理用户</h4>
 	<div style="text-align:center">
-		<table class="table table-striped" style="width: 90%;margin:auto">
+		<table class="table table-striped" style="width: 50%;margin:auto">
 			<thead>
 				<tr>
-					<td class="active">id</td>
 					<td class="success">姓名</td>
 					<td class="warning">密码</td>
 					<td class="warning">删除用户</td>
@@ -22,7 +21,6 @@
 			<tbody>
 				<div>
 					<tr th:each="user: ${userList}">
-						<td th:text="${user.id}"></td>
 						<td th:text="${user.username}"></td>
 						<td th:text="${user.password}"></td>
 						<td><a th:href="@{/user/delete(id=${user.id})}">删除</a></td>

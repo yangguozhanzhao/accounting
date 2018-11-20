@@ -12,6 +12,7 @@ import com.accounting.entity.User;
 public class UserService {
     @Autowired
     private UserDao userDao ;
+    
 
     public void save(User user) {
     	userDao.save(user);
@@ -26,7 +27,7 @@ public class UserService {
     }
     
     public User findByUsername(String username) {
-        return userDao.findByUsernameAndPassword(username);
+        return userDao.findByUsername(username);
     }
     
     public List<User> findUserList() {

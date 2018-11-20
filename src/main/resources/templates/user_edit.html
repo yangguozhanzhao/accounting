@@ -9,12 +9,12 @@
 
 <body style="text-align: center;">
 	<div th:replace="base :: header"></div>
-	<h2>修改密码</h2>
+	<h3>修改密码</h3>
 	<form id="confirmEditForm" class="form-horizontal" th:action="@{/user/update}" method="post">
 		<p>&#12288;用户名：<input type="text" class="form-control" name="username" id="username" disabled="disabled" th:value="${session.user.username}" /></p>
 		<p>&#12288;新密码：<input type="text" class="form-control" name="password" id="password" placeholder="新密码" /></p>
 		<p>重复密码：<input type="text" class="form-control" name="password1" id="password1" placeholder="重复密码" /></p>
-		<p>&#12288;&#12288;&#12288;&#12288;&#12288;<input value="确认修改" class="btn btn-info" onclick="check()" /></p>
+		<p>&#12288;&#12288;&#12288;&#12288;&#12288;<input value="确认修改" type="button" class="btn btn-primary" onclick="check()" /></p>
 	</form>
 	<div th:replace="base :: footer"></div>
 

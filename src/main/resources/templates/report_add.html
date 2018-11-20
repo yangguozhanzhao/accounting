@@ -18,14 +18,14 @@
 			enctype="multipart/form-data" th:action="@{/report/add}"
 			method="post">
 			记账日期：<input id="datepicker" type="text" name="recordDate" />
-			CSV文件(可选择多个)：<input type="file" id="csv" name="file"
+			CSV文件：<input type="file" id="csv" name="file"
 				style="width: 40%" /> <input id="upload" type="button" value="上传日报"
 				class="btn btn-primary" />
 		</form>
 	</div>
 
 	<table class="table table-striped" style="width: 80%" align="center">
-		<caption>最近上传日报</caption>
+		<caption><h5>最近上传日报</h5></caption>
 		<thead>
 			<tr>
 				<th>记账日期</th>
@@ -70,7 +70,6 @@
 				alert("日报只能为CSV格式");
 			} else {
 				$('#report-form').submit();
-				console.log("上传日报表");
 			}
 		}
 	});

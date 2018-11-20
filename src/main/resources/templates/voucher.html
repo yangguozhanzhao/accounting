@@ -27,11 +27,12 @@
 		<a th:href="@{'/voucher/next/'+${voucher.id}}" th:text="下一个"> </a>
 	</div>
 
-	<div>
+	<div style="text-align: left; margin-top:30px">
+		<p style="text-align: center;"> <img id="image" style="width: 80%;" th:src="@{${voucher.imagePath}}" />
+		</p>
 		<p class="noprint"
-			th:text="${#dates.format(voucher.recordDate,'yyyy-MM-dd')}"></p>
-		<p class="noprint" th:text="${voucher.content}"></p>
-		<img id="image" style="width: 80%" th:src="${voucher.imagePath}" />
+			th:text="${'记账日期:'+#dates.format(voucher.recordDate,'yyyy-MM-dd')}"></p>
+		<p class="noprint" th:text="${'OCR识别内容：'+voucher.content}"></p>
 	</div>
 
 	<div class="noprint">
@@ -46,8 +47,6 @@
 	}
 	
 	
-	
-
 	//]]>
 </script>
 </html>
