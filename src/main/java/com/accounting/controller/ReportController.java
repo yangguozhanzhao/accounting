@@ -77,14 +77,19 @@ public class ReportController {
 	
 	// 上传日报表页面
 	@GetMapping("report/toAdd")
-	public String add(Model model) {
-		Page<Report> reports = reportService.findRecent();
-		if(!reports.getContent().isEmpty()) {
-			model.addAttribute("recentReports",reports);
-			logger.info(reports.getContent().get(0).getFilePath());
+	public String add(Model model,HttpSession session) {
+		if(session.getAttribute("user")==null) {
+			return "index";
+		} else {
+			Page<Report> reports = reportService.findRecent();
+			if(!reports.getContent().isEmpty()) {
+				model.addAttribute("recentReports",reports);
+				logger.info(reports.getContent().get(0).getFilePath());
+			}
+			
+			return "report_add";
 		}
 		
-		return "report_add";
 	}
 	
 	// 查询日报在voucher里面
@@ -97,39 +102,44 @@ public class ReportController {
 		logger.info("try to add report");
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
 		User user = (User) session.getAttribute("user");
-		if (!file.isEmpty()) {
+		if (user==null) {
+			return "index";
+		} else {
+			if (!file.isEmpty()) {
 
-			String imagePath = "/upload/csv/";
-			String uploadDir = CLASSPATH+imagePath;
-			uploadDir = uploadDir.replace('\\', '/');
-			String filepath=file.getOriginalFilename();
-			String filename="";
-			logger.info(uploadDir+filename);
-			// IE8是完整路径 
-			if(filepath.lastIndexOf("\\")>0) {
-				filename = recordDate +'_'+ filepath.substring(filepath.lastIndexOf("\\")+1);
-			}else {
-				filename=recordDate+'_'+filepath;
+				String imagePath = "/upload/csv/";
+				String uploadDir = CLASSPATH+imagePath;
+				uploadDir = uploadDir.replace('\\', '/');
+				String filepath=file.getOriginalFilename();
+				String filename="";
+				logger.info(uploadDir+filename);
+				// IE8是完整路径 
+				if(filepath.lastIndexOf("\\")>0) {
+					filename = recordDate +'_'+ filepath.substring(filepath.lastIndexOf("\\")+1);
+				}else {
+					filename=recordDate+'_'+filepath;
+				}
+				logger.info(filename);
+				File fileDir = new File(uploadDir,filename);
+				if (!fileDir.getParentFile().exists()) {
+					fileDir.getParentFile().mkdirs();
+				}
+				
+				file.transferTo(new File(uploadDir+filename));
+				try {
+					Date date = sdf.parse(recordDate);
+					Report report = new Report(date, imagePath+filename, user);
+					reportService.save(report);
+					logService.save(new Log("增加日报表"+filename,user));
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-			logger.info(filename);
-			File fileDir = new File(uploadDir,filename);
-			if (!fileDir.getParentFile().exists()) {
-				fileDir.getParentFile().mkdirs();
-			}
-			
-			file.transferTo(new File(uploadDir+filename));
-			try {
-				Date date = sdf.parse(recordDate);
-				Report report = new Report(date, imagePath+filename, user);
-				reportService.save(report);
-				logService.save(new Log("增加日报表"+filename,user));
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
+			return "redirect:/report/toAdd";
 		}
-
-		return "redirect:/report/toAdd";
+		
 	}
 	
 	// 日报详情
@@ -174,7 +184,12 @@ public class ReportController {
 	public String report(@PathVariable("id") Long id,HttpSession session) {
 		reportService.delete(id);
 		User user = (User) session.getAttribute("user");
-		logService.save(new Log("删除日报表"+id,user));
-		return "redirect:/report/toAdd";
+		if (user==null) {
+			return "index";
+		} else {
+			logService.save(new Log("删除日报表"+id,user));
+			return "redirect:/report/toAdd";
+		}
+		
 	}
 }

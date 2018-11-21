@@ -86,8 +86,14 @@ public class VoucherController {
 
 	// 扫描凭证页面
 	@GetMapping("voucher/toAdd")
-	public String scan() {
-		return "voucher_add";
+	public String scan(HttpSession session) {
+		User user = (User) session.getAttribute("user");
+		if (user==null) {
+			return "index";
+		} else {
+			return "voucher_add";
+		}
+		
 	}
 
 	// 添加凭证
@@ -97,7 +103,7 @@ public class VoucherController {
 			@RequestParam(value = "content", defaultValue = "无") String content,
 			@RequestParam("recordDate") String recordDate, HttpSession session) {
 		logger.info("try to add voucher");
-		if (!file.isEmpty()) {
+		if (!file.isEmpty() && session.getAttribute("user")!= null) {
 			try {
 				// 上传文件路径,按照系统日期分文件夹存储
 				String imagePath = "/upload/images/";
@@ -146,7 +152,7 @@ public class VoucherController {
 		} else {
 			logger.warn("没有图片");
 		}
-		return ResponseEntity.ok().header("Content-Type", "text/plain").body("no refresh");
+		return ResponseEntity.ok().header("Content-Type", "text/plain").body("ok");
 	}
 
 	// ajax查询凭证页面前10,暂时未用
@@ -159,114 +165,143 @@ public class VoucherController {
 
 	// 查询凭证页面前10
 	@RequestMapping(value = "toQuery", method = RequestMethod.GET)
-	public String showRecentVouchers(Model model) {
-		Page<Voucher> voucherList = voucherService.findRecent();
-		model.addAttribute("recentVouchers", voucherList);
-		logger.info("v="+voucherList.getContent());
-		return "query";
+	public String showRecentVouchers(Model model,HttpSession session) {
+		User user = (User) session.getAttribute("user");
+		
+		if (user == null) {
+			return "index";
+		} else {
+			Page<Voucher> voucherList = voucherService.findRecent();
+			model.addAttribute("recentVouchers", voucherList);
+			logger.info("v="+voucherList.getContent());
+			return "query";
+		}
 	}
 	
 	// 查询日报或者凭证
 	@RequestMapping(value = "query")
-	public String query(Model model,HttpServletRequest request) throws ParseException {
-		logger.info("query");
-		String date1=request.getParameter("recordDate1");
-		String date2=request.getParameter("recordDate2");
-		String key=request.getParameter("key");
-		String radio=request.getParameter("optionsRadios");
-		String pageNum= request.getParameter("pageNum");
-		int pageSize = 20;
-		logger.info(date1+date2+key+radio+pageNum);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
-		Date startDate = sdf.parse(date1);
-		Date endDate =sdf.parse(date2);
-		
-		//查询凭证
-		if (radio.equals("report")) {
-			logger.info("searcher report");
-			logger.info("pa="+startDate+endDate+key+radio+pageNum);
-			Page<Report> rPage = reportService.findByDateR(Integer.parseInt(pageNum), pageSize, startDate, endDate);
-			logger.info("查询完毕");
-			if(rPage!=null) {
-				logger.info("结果为report="+rPage.getContent());
-				model.addAttribute("rPage", rPage);
-				model.addAttribute("startDate",date1);
-				model.addAttribute("endDate",date2);
-				model.addAttribute("content",key);
-				model.addAttribute("radio",radio);
-			} else {
-				logger.info("report 结果为空");
-			}
-		} else if(radio.equals("voucher")) {
+	public String query(Model model,HttpServletRequest request,HttpSession session) throws ParseException {
+		User user = (User) session.getAttribute("user");
+		if (user == null) {
+			return "index";
+		} else {
+			String date1=request.getParameter("recordDate1");
+			String date2=request.getParameter("recordDate2");
+			String key=request.getParameter("key");
+			String radio=request.getParameter("optionsRadios");
+			String pageNum= request.getParameter("pageNum");
+			int pageSize = 20;
+			logger.info(date1+date2+key+radio+pageNum);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+			Date startDate = sdf.parse(date1);
+			Date endDate =sdf.parse(date2);
 			
-			Page<Voucher> vPage=voucherService.findByDateAndContent(Integer.parseInt(pageNum), pageSize, startDate, endDate, key);
-			//
-			if(vPage!=null) {
-				logger.info("结果为voucher="+vPage.getContent());
-				model.addAttribute("vPage", vPage);
-				model.addAttribute("startDate",date1);
-				model.addAttribute("endDate",date2);
-				model.addAttribute("content",key);
-				model.addAttribute("radio",radio);
-			} else {
-				logger.info("voucher结果为空");
+			//查询凭证
+			if (radio.equals("report")) {
+				logger.info("searcher report");
+				logger.info("pa="+startDate+endDate+key+radio+pageNum);
+				Page<Report> rPage = reportService.findByDateR(Integer.parseInt(pageNum), pageSize, startDate, endDate);
+				logger.info("查询完毕");
+				if(rPage!=null) {
+					logger.info("结果为report="+rPage.getContent());
+					model.addAttribute("rPage", rPage);
+					model.addAttribute("startDate",date1);
+					model.addAttribute("endDate",date2);
+					model.addAttribute("content",key);
+					model.addAttribute("radio",radio);
+				} else {
+					logger.info("report 结果为空");
+				}
+			} else if(radio.equals("voucher")) {
+				
+				Page<Voucher> vPage=voucherService.findByDateAndContent(Integer.parseInt(pageNum), pageSize, startDate, endDate, key);
+				//
+				if(vPage!=null) {
+					logger.info("结果为voucher="+vPage.getContent());
+					model.addAttribute("vPage", vPage);
+					model.addAttribute("startDate",date1);
+					model.addAttribute("endDate",date2);
+					model.addAttribute("content",key);
+					model.addAttribute("radio",radio);
+				} else {
+					logger.info("voucher结果为空");
+				}
 			}
+			return "query";
 		}
-		return "query";
+		
 	} 
 
 	// 根据id显示详情
-	@GetMapping("voucher/voucher/{id}")
+	@GetMapping("voucher/{id}")
 	public String voucher(Model model, @PathVariable("id") Long id,HttpSession session) {
-		Voucher voucher = voucherService.findById(id);
-		model.addAttribute("voucher", voucher);
 		User user = (User) session.getAttribute("user");
-		logService.save(new Log("查看凭证"+id,user));
-		return "voucher";
+		if (user==null) {
+			return "index";
+		} else {
+			Voucher voucher = voucherService.findById(id);
+			model.addAttribute("voucher", voucher);
+			logService.save(new Log("查看凭证"+id,user));
+			return "voucher";
+		}
 	}
 	
 	// 根据id显示详情
 	@GetMapping("voucher/prev/{id}")
 	public String prev(Model model, @PathVariable("id") Long id,HttpSession session) {
-		
-		// 只能搜到10以内
-		int n = 10;
-		id=id-1;
-		while(!voucherService.existsById(id) && n>0) {
-			id=id-1;
-			n=n-1;
-		}
-		Voucher voucher = voucherService.findById(id);
-		model.addAttribute("voucher", voucher);
 		User user = (User) session.getAttribute("user");
-		logService.save(new Log("查看凭证"+id,user));
-		return "redirect:/voucher/voucher/"+id;
+		if (user == null) {
+			return "index";
+		} else {
+			// 只能搜到10以内
+			int n = 10;
+			id=id-1;
+			while(!voucherService.existsById(id) && n>0) {
+				id=id-1;
+				n=n-1;
+			}
+			Voucher voucher = voucherService.findById(id);
+			model.addAttribute("voucher", voucher);
+			logService.save(new Log("查看凭证"+id,user));
+			return "redirect:/voucher/"+id;
+		}
+		
 	}
 	
 	// 根据id显示详情
 		@GetMapping("voucher/next/{id}")
 		public String next(Model model, @PathVariable("id") Long id,HttpSession session) {
-			
-			// 只能搜到10以内
-			int n = 10;
-			id=id+1;
-			while(!voucherService.existsById(id) && n>0) {
-				id=id+1;
-				n=n-1;
-			}
-			Voucher voucher = voucherService.findById(id);
-			model.addAttribute("voucher", voucher);
 			User user = (User) session.getAttribute("user");
-			logService.save(new Log("查看凭证"+id,user));
-			return "redirect:/voucher/voucher/"+id;
+			if (user == null) {
+				return "index";
+			} else {
+				// 只能搜到10以内
+				int n = 10;
+				id=id+1;
+				while(!voucherService.existsById(id) && n>0) {
+					id=id+1;
+					n=n-1;
+				}
+				Voucher voucher = voucherService.findById(id);
+				model.addAttribute("voucher", voucher);
+				logService.save(new Log("查看凭证"+id,user));
+				return "redirect:/voucher/"+id;
+			}
+			
 		}
 
 	// 删除
-	public String report(@PathVariable("id") Long id,HttpSession session) {
-		voucherService.delete(id);
+	@RequestMapping("voucher/delete/{id}")
+	public String report(@PathVariable("id") Long id,HttpSession session){
 		User user = (User) session.getAttribute("user");
-		logService.save(new Log("删除凭证"+id,user));
-		return "redirect:/toQuery";
+		if (user==null) {
+			return "index";
+		} else {
+			voucherService.delete(id);
+			logService.save(new Log("删除凭证"+id,user));
+			return "redirect:/toQuery";
+		}
+		
 	}
 
 }

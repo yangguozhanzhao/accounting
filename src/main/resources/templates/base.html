@@ -11,7 +11,7 @@
 	<script th:src="@{/js/bootstrap-datepicker.zh-CN.min.js}"></script>
 	<script th:inline="javascript">
 			var session = [[${session}]];
-			if (session.user == null) {
+			if (session.user.username == null) {
 				alert("请先登录！");
 				window.location.href = "/index.html";
 			}

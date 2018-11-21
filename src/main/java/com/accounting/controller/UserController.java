@@ -23,45 +23,45 @@ import com.accounting.service.UserService;
 public class UserController {
 	@Autowired
 	private UserService userService;
-	
+
 	@Autowired
 	private LogService logService;
-		
+
 	// 主页
-	@RequestMapping(value= {"/","index"})
-	public String index(HttpSession session){
-		if(userService.findByUsername("admin")==null) {
-			User admin = new User("admin","yangzhan");
-			User test = new User("杨展","123456");
+	@RequestMapping(value = { "/", "index" })
+	public String index(HttpSession session) {
+		if (userService.findByUsername("admin") == null) {
+			User admin = new User("admin", "yangzhan");
+			User test = new User("杨展", "123456");
 			userService.save(admin);
 			userService.save(test);
 		}
-		if(session.getAttribute("user")==null) {
+		if (session.getAttribute("user") == null) {
 			return "index";
 		} else {
 			return "redirect:/toQuery";
 		}
 	}
-	
+
 	// 用户登录
 	@RequestMapping("login")
-	public String login(String username,String password,HttpSession session) {
+	public String login(String username, String password, HttpSession session) {
 		User user = userService.findByUsernameAndPassword(username, password);
-		if(user==null) {
+		if (user == null) {
 			return "index";
-		}else {
-			
-			logService.save(new Log("登录系统",user));
+		} else {
+
+			logService.save(new Log("登录系统", user));
 			session.setAttribute("user", user);
 			return "redirect:/toQuery";
 		}
 	}
-	
+
 	// 用户退出
 	@RequestMapping("logout")
 	public String logout(HttpSession session) {
 		User user = (User) session.getAttribute("user");
-		logService.save(new Log("退出系统",user));
+		logService.save(new Log("退出系统", user));
 		session.removeAttribute("user");
 		return "index";
 	}
@@ -71,41 +71,62 @@ public class UserController {
 	public String editUser(Model model) {
 		return "user_edit";
 	}
+
 	// 确认修改
 	@RequestMapping("user/update")
-	public String editUser(User user,HttpSession session) {
-		User editUser = userService.findByUsername(user.getUsername());
-		editUser.setPassword(user.getPassword());
-		userService.save(editUser);
-		logService.save(new Log("修改密码",editUser));
-		session.removeAttribute("user");
-		return "index";
+	public String editUser(User user, HttpSession session) {
+		if (session.getAttribute("user") == null) {
+			return "index";
+		} else {
+			User editUser = userService.findByUsername(user.getUsername());
+			editUser.setPassword(user.getPassword());
+			userService.save(editUser);
+			logService.save(new Log("修改密码", editUser));
+			session.removeAttribute("user");
+			return "index";
+		}
 	}
-	
+
 	// 查看所有用户
-	@RequestMapping(value = "user/list",method=RequestMethod.GET)
-	public String users(Model model) {
-		List<User> userList = userService.findUserList();
-		model.addAttribute("userList",userList);
-		return "user_list";
+	@RequestMapping(value = "user/list", method = RequestMethod.GET)
+	public String users(Model model,HttpSession session) {
+		User user = (User) session.getAttribute("user");
+		if (user==null || user.getUsername() != "admin") {
+			return "index";
+		} else {
+			List<User> userList = userService.findUserList();
+			model.addAttribute("userList", userList);
+			return "user_list";
+		}
+		
 	}
-	
+
 	// 删除用户
 	@RequestMapping(value = "user/delete")
-	public String delete(Long id,HttpSession session) {
-		userService.delete(id);
+	public String delete(Long id, HttpSession session) {
 		User user = (User) session.getAttribute("user");
-		logService.save(new Log("删除用户"+id,user));
-		return "redirect:/user/list";
+		if (user==null || user.getUsername() != "admin") {
+			return "index";
+		} else {
+			userService.delete(id);
+			logService.save(new Log("删除用户" + id, user));
+			return "redirect:/user/list";
+		}
+		
 	}
-	
+
 	// 增加用户
 	@RequestMapping("user/add")
-    public String add(User user,HttpSession session) {
-        userService.save(user);
-        User admin = (User) session.getAttribute("user");
-		logService.save(new Log("增加用户"+user.getUsername(),admin));
-        return "redirect:/user/list";
-    }
-	
+	public String add(User addUser, HttpSession session) {
+		User user = (User) session.getAttribute("user");
+		if (user==null || user.getUsername() != "admin") {
+			return "index";
+		}else {
+			userService.save(addUser);
+			logService.save(new Log("增加用户" + addUser.getUsername(), user));
+			return "redirect:/user/list";
+		}
+		
+	}
+
 }
