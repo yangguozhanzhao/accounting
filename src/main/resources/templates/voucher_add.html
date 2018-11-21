@@ -9,72 +9,6 @@
 <title>扫描凭据</title>
 
 <script th:inline="javascript">
-	
-</script>
-</head>
-
-<body onload="Load()" onunload="Unload()" style="text-align: center;">
-
-
-	<div th:replace="base :: header"></div>
-	<div>
-		<div style="width: 40%; float: left;">
-			<object id="video" type="application/x-eloamplugin" width="456"
-				height="342" name="view"></object>
-			<div>
-				<input class="submit_01" type="button" value="打开摄像头"
-					onclick="OpenVideo()" /> <input class="submit_01" type="button"
-					value="关闭摄像头" onclick="CloseVideo()" /> <input id="Deskew"
-					type="checkbox" checked="checked" onclick="Deskew(this)" />自动纠偏 <input
-					id="OCR" checked="checked" type="checkbox" />文字识别
-			</div>
-			<iframe id="uf-frame" name="uf-frame"
-				style="width: 1px; height: 0px;"></iframe>
-			<form id="voucher-form" class="form-horizontal"
-				enctype="multipart/form-data" th:action="@{/voucher/add}"
-				method="post" target="uf-frame">
-				<input type="file" id="uploadImage" name="file"
-					style="width: 1px; height: 0px;" />
-				<div>
-					<p>文字识别的内容如下</p>
-					<textarea id="OCRtext" name="content"
-						style="width: 95%; height: 150px;"></textarea>
-				</div>
-				<div>
-					设置记账日期：<input id="datepicker" type="text" name="recordDate" /> <input
-						class="btn btn-primary" type="button" value="拍照" onclick="Scan()" />
-					<input class="btn btn-success" type="button" value="保存"
-						onclick="uploadVoucher()" />
-				</div>
-			</form>
-
-
-		</div>
-
-		<div style="width: 60%; float: right;">
-			<object id="image" type="application/x-eloamplugin" width="730"
-				height="547" name="view"></object>
-
-
-
-		</div>
-	</div>
-
-	<div>
-		<table class="table table-striped" style="width: 80%" align="center">
-			<thead>
-
-			</thead>
-			<tbody>
-
-			</tbody>
-		</table>
-
-	</div>
-	<div th:replace="base :: footer"></div>
-
-</body>
-<script th:inline="javascript">
 	//<![CDATA[
 	var DeviceMain;//主头
 	var Video;//视频
@@ -141,15 +75,18 @@
 		//type设备类型， 1 表示视频设备， 2 表示音频设备
 		//idx设备索引
 		//dbt 1 表示设备到达， 2 表示设备丢失
+		console.log("load");
+		console.log(view());
+		console.log(plugin());
 		addEvent(plugin(), 'DevChange', function(type, idx, dbt) {
 			if (1 == type)//视频设备
 			{
-				
+
 				if (1 == dbt)//设备到达
 				{
 					var deviceType = plugin().Global_GetEloamType(1, idx);
 					if (1 == deviceType)//主摄像头
-					{
+					{ 
 						if (null == DeviceMain) {
 							DeviceMain = plugin().Global_CreateDevice(1, idx);
 							if (DeviceMain) {
@@ -175,11 +112,10 @@
 
 		view().Global_SetWindowName("view");
 		thumb().Global_SetWindowName("view");
-		
 
 		plugin().Global_InitDevs();
-		
-		if(Video){
+
+		if (Video) {
 			//开启纠偏
 			if (isDeskew()) {
 				plugin().Video_EnableDeskewEx(Video, 1)
@@ -189,12 +125,10 @@
 
 			// OCR
 			plugin().Global_InitOcr();
-			
+
 		} else {
 			alert("扫描设备未连接！")
 		}
-		
-
 	}
 
 	function Unload() {
@@ -207,6 +141,7 @@
 			plugin().Device_Release(DeviceMain);
 			DeviceMain = null;
 		}
+		console.log("unload")
 		plugin().Global_DeinitOcr();
 		plugin().Global_DeinitDevs();
 	}
@@ -261,8 +196,6 @@
 		}
 	}
 
-
-
 	// 自动裁剪
 	function Deskew(obj) {
 		if (obj.checked) {
@@ -295,7 +228,73 @@
 			alert("请先拍照！");
 		}
 	}
+	//]]>
+</script>
+</head>
 
+<body onload="Load()" onunload="Unload()" style="text-align: center;">
+
+
+	<div th:replace="base :: header"></div>
+	<div>
+		<div style="width: 40%; float: left;">
+			<object id="video" type="application/x-eloamplugin" width="456"
+				height="342" name="view"></object>
+			<div>
+				<input class="submit_01" type="button" value="打开摄像头"
+					onclick="OpenVideo()" /> <input class="submit_01" type="button"
+					value="关闭摄像头" onclick="CloseVideo()" /> <input id="Deskew"
+					type="checkbox" checked="checked" onclick="Deskew(this)" />自动纠偏 <input
+					id="OCR" checked="checked" type="checkbox" />文字识别
+			</div>
+			<iframe id="uf-frame" name="uf-frame"
+				style="width: 1px; height: 0px;"></iframe>
+			<form id="voucher-form" class="form-horizontal"
+				enctype="multipart/form-data" th:action="@{/voucher/add}"
+				method="post" target="uf-frame">
+				<input type="file" id="uploadImage" name="file"
+					style="width: 1px; height: 0px;" />
+				<div>
+					<p>文字识别的内容如下</p>
+					<textarea id="OCRtext" name="content"
+						style="width: 95%; height: 150px;"></textarea>
+				</div>
+				<div>
+					设置记账日期：<input id="datepicker" type="text" name="recordDate" /> <input
+						class="btn btn-primary" type="button" value="拍照" onclick="Scan()" />
+					<input class="btn btn-success" type="button" value="保存"
+						onclick="uploadVoucher()" />
+				</div>
+			</form>
+
+
+		</div>
+
+		<div style="width: 60%; float: right;">
+			<object id="image" type="application/x-eloamplugin" width="730"
+				height="547" name="view"></object>
+
+
+
+		</div>
+	</div>
+
+	<div>
+		<table class="table table-striped" style="width: 80%" align="center">
+			<thead>
+
+			</thead>
+			<tbody>
+
+			</tbody>
+		</table>
+
+	</div>
+	<div th:replace="base :: footer"></div>
+
+</body>
+<script th:inline="javascript">
+	//<![CDATA[
 	// 有窗口弹出
 	function setImage(path) {
 		var image_input_obj = document.getElementById("uploadImage");
@@ -319,7 +318,7 @@
 		WshShell.sendKeys("^v");
 
 	}
-	
+
 	// 校验与上传
 	function uploadVoucher() {
 		var image = $('#uploadImage').val();
@@ -335,53 +334,49 @@
 			}
 		}
 	}
-	
-/* 	 $(document).ready(function() {
-		 loadRecentVouchers();
-	 }); */
 
-	function loadRecentVouchers()
-	{	
-		var str="";
-		$.ajax({
-			type: 'GET',
-			contentType: "application/json",
-			url: "/voucher/recent",
-			dataType: 'json',
-			cache: false,
-			timeout: 600000,
-			success: function(data){
-				if(data!=null && data.content!=null ){
-					var voucherList = data.content;
-					for(var i= 0;voucherList.length>i;i++ ){
-					var tr= document.createElement('tr');
-                	var dateTd = document.createElement('td');
-                	var imgTd = document.createElement('td');
-                	var contentTd = document.createElement('td');
-                	var userTd = document.createElement('td');
-                	var timeTd = document.createElement('td');
-                	var deleteTd = document.createElement('td');
-                    dateTd.innerHTML=voucherList[i].recordDate;
-                    imgTd.innerHTML="<img src="+voucherList[i].imagePath+" style='height:50px;'"+" />";
-                    contentTd.innerHTML=voucherList[i].content;
-                    userTd.innerHTML=voucherList[i].user.username;
-                    timeTd.innerHTML=voucherList[i].createTime;
-                    deleteTd.innerHTML="<a href='delete/"+voucherList[i].id+"' >删除</a>";
-                    tr.appendChild(dateTd);
-                    tr.appendChild(imgTd);
-                    tr.appendChild(contentTd);
-                    tr.appendChild(userTd);
-                    tr.appendChild(timeTd);
-                    tr.appendChild(deleteTd);
-					document.getElementsByTagName("tbody")[0].appendChild(tr);
+	function loadRecentVouchers() {
+		var str = "";
+		$
+				.ajax({
+					type : 'GET',
+					contentType : "application/json",
+					url : "/voucher/recent",
+					dataType : 'json',
+					cache : false,
+					timeout : 600000,
+					success : function(data) {
+						if (data != null && data.content != null) {
+							var voucherList = data.content;
+							for (var i = 0; voucherList.length > i; i++) {
+								var tr = document.createElement('tr');
+								var dateTd = document.createElement('td');
+								var imgTd = document.createElement('td');
+								var contentTd = document.createElement('td');
+								var userTd = document.createElement('td');
+								var timeTd = document.createElement('td');
+								var deleteTd = document.createElement('td');
+								dateTd.innerHTML = voucherList[i].recordDate;
+								imgTd.innerHTML = "<img src="+voucherList[i].imagePath+" style='height:50px;'"+" />";
+								contentTd.innerHTML = voucherList[i].content;
+								userTd.innerHTML = voucherList[i].user.username;
+								timeTd.innerHTML = voucherList[i].createTime;
+								deleteTd.innerHTML = "<a href='delete/"+voucherList[i].id+"' >删除</a>";
+								tr.appendChild(dateTd);
+								tr.appendChild(imgTd);
+								tr.appendChild(contentTd);
+								tr.appendChild(userTd);
+								tr.appendChild(timeTd);
+								tr.appendChild(deleteTd);
+								document.getElementsByTagName("tbody")[0]
+										.appendChild(tr);
+							}
+
+						}
 					}
-					
-				}
-			}
-		});
+				});
 	}
-	
-	
+
 	//日期选择插件
 	$('#datepicker').datepicker({
 		todayBtn : "linked",
