@@ -51,7 +51,7 @@
 				<span th:if="${recentVouchers.content!=null}">
 					<tr th:each="voucher: ${recentVouchers.content}">
 						<td th:text="${#dates.format(voucher.recordDate,'yyyy-MM-dd')}"></td>
-						<td><a th:href="@{'voucher/'+${voucher.id}}"><img
+						<td><a th:href="@{'/voucher/'+${voucher.id}}"><img
 								th:src="@{${voucher.imagePath}}" style="height: 50px;" /></a></td>
 						
 						<td style="width: 50%"
@@ -86,7 +86,7 @@
 					<span th:if="${vPage.content!=null}">
 						<tr th:each="voucher: ${vPage.content}">
 							<td th:text="${#dates.format(voucher.recordDate,'yyyy-MM-dd')}"></td>
-							<td><a th:href="@{'voucher/'+${voucher.id}}"><img
+							<td><a th:href="@{'/voucher/'+${voucher.id}}"><img
 									th:src="@{${voucher.imagePath}}" style="height: 50px;" /></a></td>
 							<td style="width: 50%"
 								th:text="${#strings.length(voucher.content)} &lt;150? ${voucher.content} : ${#strings.substring(voucher.content,0,150)}+'...'"></td>

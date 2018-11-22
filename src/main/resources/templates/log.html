@@ -56,8 +56,7 @@
 		</table>
 		<div class="pagination pagination-lg">
 			<ul>
-				<li th:class="${allPage.first? 'disabled' : ''}"><a
-					th:href="@{'/log/'+${allPage.number}}">上一页</a></li>
+				<li th:class="${allPage.first? 'disabled' : ''}"><a th:if="${!allPage.first}" th:href="@{'/log/'+${allPage.number}}">上一页</a><a th:if="${allPage.first}" href="#">上一页</a></li>
 				<li th:if="${allPage.number-2 ge 0}"><a
 					th:href="@{'/log/'+${allPage.number-1}}"
 					th:text="${allPage.number-1}"></a></li>
@@ -65,14 +64,13 @@
 					th:href="@{'/log/'+${allPage.number}}"
 					th:text="${allPage.number}"></a></li>
 				<li class="active"><a href="#" th:text="${allPage.number+1}">1</a></li>
-				<li th:if="${allPage.number+1 le allPage.totalPages}"><a
+				<li th:if="${allPage.number+1 lt allPage.totalPages}"><a
 					th:href="@{'/log/'+ ${allPage.number+2}}"
 					th:text="${allPage.number+2}">1</a></li>
-				<li th:if="${allPage.number+2 le allPage.totalPages}"><a
+				<li th:if="${allPage.number+2 lt allPage.totalPages}"><a
 					th:href="@{'/log/'+ ${allPage.number+2}}"
 					th:text="${allPage.number+3}">1</a></li>
-				<li th:class="${allPage.last?'disabled' : ''}"><a
-					th:href="@{'/log/'+ ${allPage.number+2}}">下一页</a></li>
+				<li th:class="${allPage.last?'disabled' : ''}"><a th:if="${!allPage.last}" th:href="@{'/log/'+ ${allPage.number+2}}">下一页</a><a th:if="${allPage.last}" href="#">下一页</a></li>
 			</ul>
 		</div>
 	</div>
@@ -107,8 +105,9 @@
 		</table>
 		<div class="pagination pagination-lg">
 			<ul>
-				<li th:class="${lPage.first? 'disabled' : ''}"><a
-					th:href="@{/logQuery(pageNum=${lPage.number},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}">上一页</a></li>
+				<li th:class="${lPage.first? 'disabled' : ''}"><a th:if="${!lPage.first}"
+					th:href="@{/logQuery(pageNum=${lPage.number},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}">上一页</a>
+					<a th:if="${lPage.first}" href="#">上一页</a></li>
 				<li th:if="${lPage.number-2 ge 0}"><a
 					th:href="@{/logQuery(pageNum=${lPage.number-1},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
 					th:text="${lPage.number-1}"></a></li>
@@ -116,14 +115,15 @@
 					th:href="@{/logQuery(pageNum=${lPage.number},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
 					th:text="${lPage.number}"></a></li>
 				<li class="active"><a href="#" th:text="${lPage.number+1}">1</a></li>
-				<li th:if="${lPage.number+1 le lPage.totalPages}"><a
+				<li th:if="${lPage.number+1 lt lPage.totalPages}"><a
 					th:href="@{/logQuery(pageNum=${lPage.number+2},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
 					th:text="${lPage.number+2}">1</a></li>
-				<li th:if="${lPage.number+2 le lPage.totalPages}"><a
+				<li th:if="${lPage.number+2 lt lPage.totalPages}"><a
 					th:href="@{/logQuery(pageNum=${lPage.number+3},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}"
 					th:text="${lPage.number+3}">1</a></li>
-				<li th:class="${lPage.last?'disabled' : ''}"><a
-					th:href="@{/logQuery(pageNum=${lPage.number+2},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}">下一页</a></li>
+				<li th:class="${lPage.last?'disabled' : ''}"><a th:if="${!lPage.last}"
+					th:href="@{/logQuery(pageNum=${lPage.number+2},startDate=${startDate},endDate=${endDate},content=${content},username=${username})}">下一页</a>
+					<a th:if="${lPage.last}" href="#">下一页</a></li>
 			</ul>
 		</div>
 	</div>

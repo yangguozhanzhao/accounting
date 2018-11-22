@@ -38,38 +38,46 @@ public class LogController {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	@RequestMapping(value="logQuery")
-	public String query(Model model,HttpServletRequest request) throws ParseException {
+	public String query(Model model,HttpServletRequest request,HttpSession session) throws ParseException {
 		
-		String date1=request.getParameter("startDate");
-		String date2=request.getParameter("endDate");
-		String pageNum=request.getParameter("pageNum");
-		String content=request.getParameter("content");
-		String username = request.getParameter("username");
-		logger.info("try to get log");
-		User user = userService.findByUsername("username");
-		int pageSize =1;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
-		logger.info(date1,date2);
-		if (date1!=null && date2!=null) {
-		Date startDate = sdf.parse(date1);
-		Date endDate =sdf.parse(date2);
-		logger.info("pra="+pageNum+pageSize+startDate+endDate+content+username);
-		Page<Log> lPage=logService.findAllByFilter(Integer.parseInt(pageNum), pageSize, startDate, endDate, content, user);
-		model.addAttribute("lPage",lPage);
-		model.addAttribute("startDate",date1);
-		model.addAttribute("endDate",date2);
-		model.addAttribute("content",content);
-		model.addAttribute("username",username);
+		if(session.getAttribute("user")==null) {
+			return "index";
+		} else {
+			String date1=request.getParameter("startDate");
+			String date2=request.getParameter("endDate");
+			String pageNum=request.getParameter("pageNum");
+			String content=request.getParameter("content");
+			String username = request.getParameter("username");
+			logger.info("try to get log = "+username);
+			User user = userService.findByUsername(username);
+			int pageSize =20;
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+			logger.info(date1,date2);
+			if (date1!=null && date2!=null) {
+			Date startDate = sdf.parse(date1);
+			Date endDate =sdf.parse(date2);
+			logger.info("pra="+pageNum+pageSize+startDate+endDate+content+user);
+			Page<Log> lPage=logService.findAllByFilter(Integer.parseInt(pageNum), pageSize, startDate, endDate, content, user);
+			model.addAttribute("lPage",lPage);
+			model.addAttribute("startDate",date1);
+			model.addAttribute("endDate",date2);
+			model.addAttribute("content",content);
+			model.addAttribute("username",username);
+			}
+			return "log";
 		}
-		return "log";
 	}
 	
 	@RequestMapping(value="log/{page}")
-	public String allLog(@PathVariable("page") int page,Model model) {
-		Page<Log> allPage= logService.findAll(page, 20);
-		model.addAttribute("allPage",allPage);
-		return "log";
+	public String allLog(@PathVariable("page") int page,Model model,HttpSession session) {
+		
+		if(session.getAttribute("user")==null) {
+			return "index";
+		} else {
+			Page<Log> allPage= logService.findAll(page, 20);
+			model.addAttribute("allPage",allPage);
+			return "log";
+		}
+		
 	}
-	
-	
 }

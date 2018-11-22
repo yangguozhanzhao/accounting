@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
@@ -26,6 +28,7 @@ public class UserController {
 
 	@Autowired
 	private LogService logService;
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	// 主页
 	@RequestMapping(value = { "/", "index" })
@@ -74,16 +77,16 @@ public class UserController {
 
 	// 确认修改
 	@RequestMapping("user/update")
-	public String editUser(User user, HttpSession session) {
-		if (session.getAttribute("user") == null) {
+	public String editUser(String password, HttpSession session) {
+		User user = (User) session.getAttribute("user");
+		if (user == null) {
 			return "index";
 		} else {
-			User editUser = userService.findByUsername(user.getUsername());
-			editUser.setPassword(user.getPassword());
-			userService.save(editUser);
-			logService.save(new Log("修改密码", editUser));
+			user.setPassword(password);
+			userService.save(user);
+			logService.save(new Log("修改密码",user));
 			session.removeAttribute("user");
-			return "index";
+			return "redirect:/index";
 		}
 	}
 
@@ -91,7 +94,7 @@ public class UserController {
 	@RequestMapping(value = "user/list", method = RequestMethod.GET)
 	public String users(Model model,HttpSession session) {
 		User user = (User) session.getAttribute("user");
-		if (user==null || user.getUsername() != "admin") {
+		if (user==null || !user.getUsername().equals("admin")) {
 			return "index";
 		} else {
 			List<User> userList = userService.findUserList();
@@ -105,7 +108,7 @@ public class UserController {
 	@RequestMapping(value = "user/delete")
 	public String delete(Long id, HttpSession session) {
 		User user = (User) session.getAttribute("user");
-		if (user==null || user.getUsername() != "admin") {
+		if (user==null || !user.getUsername().equals("admin")) {
 			return "index";
 		} else {
 			userService.delete(id);
@@ -118,8 +121,9 @@ public class UserController {
 	// 增加用户
 	@RequestMapping("user/add")
 	public String add(User addUser, HttpSession session) {
+		logger.info("user="+addUser.getUsername());
 		User user = (User) session.getAttribute("user");
-		if (user==null || user.getUsername() != "admin") {
+		if (user==null || !user.getUsername().equals("admin")) {
 			return "index";
 		}else {
 			userService.save(addUser);

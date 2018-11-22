@@ -10,6 +10,75 @@
 
 <script th:inline="javascript">
 	//<![CDATA[
+	
+	//]]>
+</script>
+</head>
+
+<body onload="Load()" onunload="Unload()" style="text-align: center;">
+
+
+	<div th:replace="base :: header"></div>
+	<div>
+		<div style="width: 40%; float: left;">
+			<object id="video" type="application/x-eloamplugin" width="456"
+				height="342" name="view"></object>
+			<div>
+				<input class="submit_01" type="button" value="打开摄像头"
+					onclick="OpenVideo()" /> <input class="submit_01" type="button"
+					value="关闭摄像头" onclick="CloseVideo()" /> 
+				<input id="Deskew" type="checkbox" checked="checked" onclick="Deskew(this)" />自动纠偏				 
+ 						<input id="OCR" checked="checked" type="checkbox" />文字识别(快速)
+			</div>
+			<iframe id="uf-frame" name="uf-frame"
+				style="width: 1px; height: 0px;"></iframe>
+			<form id="voucher-form" class="form-horizontal"
+				enctype="multipart/form-data" th:action="@{/voucher/add}"
+				method="post" target="uf-frame">
+				<input type="file" id="uploadImage" name="file"
+					style="width: 1px; height: 0px;" />
+				<div>
+					<p>文字识别的内容如下</p>
+					<textarea id="OCRtext" name="content"
+						style="width: 95%; height: 150px;"></textarea>
+				</div>
+				<div>
+					设置记账日期：<input id="datepicker" type="text" name="recordDate" /> <input
+						class="btn btn-primary" type="button" value="拍照" onclick="Scan()" />
+					<input class="btn btn-success" type="button" value="保存"
+						onclick="uploadVoucher()" />
+				</div>
+			</form>
+
+
+		</div>
+
+		<div style="width: 60%; float: right;">
+			<object id="image" type="application/x-eloamplugin" width="730"
+				height="547" name="view"></object>
+
+
+
+		</div>
+	</div>
+
+	<div>
+		<table class="table table-striped" style="width: 80%" align="center">
+			<thead>
+
+			</thead>
+			<tbody>
+
+			</tbody>
+		</table>
+
+	</div>
+	<div th:replace="base :: footer"></div>
+
+</body>
+<script th:inline="javascript">
+	//<![CDATA[
+	
 	var DeviceMain;//主头
 	var Video;//视频
 	var PicPath;
@@ -75,9 +144,6 @@
 		//type设备类型， 1 表示视频设备， 2 表示音频设备
 		//idx设备索引
 		//dbt 1 表示设备到达， 2 表示设备丢失
-		console.log("load");
-		console.log(view());
-		console.log(plugin());
 		addEvent(plugin(), 'DevChange', function(type, idx, dbt) {
 			if (1 == type)//视频设备
 			{
@@ -141,7 +207,6 @@
 			plugin().Device_Release(DeviceMain);
 			DeviceMain = null;
 		}
-		console.log("unload")
 		plugin().Global_DeinitOcr();
 		plugin().Global_DeinitDevs();
 	}
@@ -172,22 +237,22 @@
 				var b = plugin().Image_Save(img, Name, 0);
 				if (b) {
 					view().View_PlayCaptureEffect();
-
 					thumb().View_SelectImage(img);
 					PicPath = Name;
 					setImage(PicPath);
-
-					if (isOCR) {
+					if ($('#OCR').attr('checked')) {
 						plugin().Global_DiscernOcr(1, img);
 						var a = plugin().Global_WaitOcrDiscern();
 						if (a) {
 							thumb().View_SetText("", 0);
 							ocr_text = plugin().Global_GetOcrPlainText(0);
-							ocr_text = ocr_text.replace(/,/g, "");
-							ocr_text = ocr_text.replace(/\s+/g, "");
+							ocr_text=ocr_text.match(/[\u4e00-\u9fa5\d\.]/g).join("");
+							
 							document.getElementById('OCRtext').value = ocr_text;
 
 						}
+					}else{
+						document.getElementById('OCRtext').value = "无";
 					}
 				}
 				plugin().Image_Release(img);
@@ -228,73 +293,7 @@
 			alert("请先拍照！");
 		}
 	}
-	//]]>
-</script>
-</head>
-
-<body onload="Load()" onunload="Unload()" style="text-align: center;">
-
-
-	<div th:replace="base :: header"></div>
-	<div>
-		<div style="width: 40%; float: left;">
-			<object id="video" type="application/x-eloamplugin" width="456"
-				height="342" name="view"></object>
-			<div>
-				<input class="submit_01" type="button" value="打开摄像头"
-					onclick="OpenVideo()" /> <input class="submit_01" type="button"
-					value="关闭摄像头" onclick="CloseVideo()" /> <input id="Deskew"
-					type="checkbox" checked="checked" onclick="Deskew(this)" />自动纠偏 <input
-					id="OCR" checked="checked" type="checkbox" />文字识别
-			</div>
-			<iframe id="uf-frame" name="uf-frame"
-				style="width: 1px; height: 0px;"></iframe>
-			<form id="voucher-form" class="form-horizontal"
-				enctype="multipart/form-data" th:action="@{/voucher/add}"
-				method="post" target="uf-frame">
-				<input type="file" id="uploadImage" name="file"
-					style="width: 1px; height: 0px;" />
-				<div>
-					<p>文字识别的内容如下</p>
-					<textarea id="OCRtext" name="content"
-						style="width: 95%; height: 150px;"></textarea>
-				</div>
-				<div>
-					设置记账日期：<input id="datepicker" type="text" name="recordDate" /> <input
-						class="btn btn-primary" type="button" value="拍照" onclick="Scan()" />
-					<input class="btn btn-success" type="button" value="保存"
-						onclick="uploadVoucher()" />
-				</div>
-			</form>
-
-
-		</div>
-
-		<div style="width: 60%; float: right;">
-			<object id="image" type="application/x-eloamplugin" width="730"
-				height="547" name="view"></object>
-
-
-
-		</div>
-	</div>
-
-	<div>
-		<table class="table table-striped" style="width: 80%" align="center">
-			<thead>
-
-			</thead>
-			<tbody>
-
-			</tbody>
-		</table>
-
-	</div>
-	<div th:replace="base :: footer"></div>
-
-</body>
-<script th:inline="javascript">
-	//<![CDATA[
+		
 	// 有窗口弹出
 	function setImage(path) {
 		var image_input_obj = document.getElementById("uploadImage");
@@ -307,6 +306,7 @@
 		WshShell.SendKeys("{Enter}");
 		WshShell.SendKeys("{Enter}");
 	}
+	
 
 	// IE8 的file不能粘贴，其他input可以
 	function setImage1(path) {
@@ -331,6 +331,12 @@
 				alert("日报只能为jpg格式");
 			} else {
 				$('#voucher-form').submit();
+				$("#OCRtext").val("");
+				var image_input_obj = document.getElementById("uploadImage");
+				image_input_obj.focus();
+				var WshShell = new ActiveXObject("WScript.Shell");
+				WshShell.SendKeys("^a");
+				WshShell.SendKeys("{Del}");
 			}
 		}
 	}
