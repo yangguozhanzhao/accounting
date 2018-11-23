@@ -23,7 +23,7 @@
 					<tr th:each="user: ${userList}">
 						<td th:text="${user.username}"></td>
 						<td th:text="${user.password}"></td>
-						<td><a th:href="@{/user/delete(id=${user.id})}">删除</a></td>
+						<td th:if="${user.username != 'admin'}"><a th:href="@{/user/delete(id=${user.id})}">删除</a></td>
 					</tr>
 				</div>
 			</tbody>

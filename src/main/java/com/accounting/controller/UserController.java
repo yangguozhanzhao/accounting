@@ -121,7 +121,7 @@ public class UserController {
 	// 增加用户
 	@RequestMapping("user/add")
 	public String add(User addUser, HttpSession session) {
-		logger.info("user="+addUser.getUsername());
+		logger.info("user="+addUser.getUsername()+addUser.getPassword());
 		User user = (User) session.getAttribute("user");
 		if (user==null || !user.getUsername().equals("admin")) {
 			return "index";
